@@ -1,7 +1,6 @@
         processor 6502
         include "vcs.h"
         include "macro.h"
-        include "xmacro.h"
 
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
 
