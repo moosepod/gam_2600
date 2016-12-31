@@ -17,16 +17,17 @@
 
 Temp            .byte
 Player_X          .byte ; X position of ball sprint
-Player_Y           .byte ; Y position of ball sprite
+Player_Y           .byte ; Y position of player sprite
 
-PLAYER_MAX_Y    equ  #188   ; Max Y position for ball sprite
-PLAYER_MIN_Y    equ  #1    ; Min Y position for ball sprite
-PLAYER_MAX_X    equ  #152   ; Max X position for ball sprite
-PLAYER_MIN_X    equ  #1    ; Min X position for ball sprite
+PLAYER_MAX_Y    equ  #182   ; Max Y position for player sprite
+PLAYER_MIN_Y    equ  #1    ; Min Y position for player sprite
+PLAYER_MAX_X    equ  #152   ; Max X position for player sprite
+PLAYER_MIN_X    equ  #1    ; Min X position for player sprite
 PLAYER_START_X  equ #9
 PLAYER_START_Y  equ #80
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
+PLAYER_SPRITE_HEIGHT equ #7 ; this is really 1 less than the sprite height
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -68,9 +69,8 @@ PreLoop dex
         sta WSYNC
         bne PreLoop
 
-        ; Wait for scanline after setting up loop 
-        lda PLAYER_COLOR
-        sta COLUP0
+
+        ;;; Setup for horizontal positioning 
         lda Player_X
         sec
         sta WSYNC
@@ -102,19 +102,26 @@ VLoop   dex
         sta WSYNC
         bne VLoop
 
-        ; Draw the ball
-        lda #PLAYER_SPRITE
+        ; Setup for sprite drawing
+        ldy #PLAYER_SPRITE_HEIGHT  ; sprite data index
+SpriteLoop
+        lda PLAYER_SPRITE_DATA,y
         sta GRP0
+        lda PLAYER_COLOR_DATA,y
+        sta COLUP0
         sta WSYNC
-        
+        dey
+        bne SpriteLoop
+       
         ; Wait for next scanline then clear the sprite
         sta WSYNC
         lda #0        
         clc
         sta GRP0
 
-        ; Close out the remaining scanlines, which will be 192-Ball Y-1 (since we waited an extra WSYNC above)
-        lda #190
+        ; Close out the remaining scanlines, which will be 192-sprite height)
+        lda #192
+        sbc #PLAYER_SPRITE_HEIGHT
         clc
         sbc Player_Y
 VWait   sbc 1
@@ -175,6 +182,34 @@ CheckJoystick
 
         rts
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Sprite data
+;---Graphics Data from PlayerPal 2600---
+
+PLAYER_SPRITE_DATA
+        .byte #%00010100;$84
+        .byte #%00111110;$84
+        .byte #%00000000;$F6
+        .byte #%00000000;$F6
+        .byte #%00001000;$F6
+        .byte #%00000000;$20
+        .byte #%00100010;$20
+        .byte #%00000000;--
+;---End Graphics Data---
+
+
+;---Color Data from PlayerPal 2600---
+
+PLAYER_COLOR_DATA
+        .byte #$84;
+        .byte #$84;
+        .byte #$F6;
+        .byte #$F6;
+        .byte #$F6;
+        .byte #$20;
+        .byte #$20;
+        .byte #$0E;
+;---End Color Data---
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Epilogue
 
