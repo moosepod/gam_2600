@@ -445,10 +445,10 @@
      61  f021
      62  f021							; 37 lines of underscan total
      63  f021							; Check joysticks
-     64  f021		       20 a0 f0 	      jsr	CheckJoystick
+     64  f021		       20 a2 f0 	      jsr	CheckJoystick
      65  f024		       85 02		      sta	WSYNC
      66  f026
-     67  f026		       a6 20		      ldx	32
+     67  f026		       a6 24		      ldx	36
      68  f028		       ca	   PreLoop    dex
      69  f029		       85 02		      sta	WSYNC
      70  f02b		       d0 fb		      bne	PreLoop
@@ -484,143 +484,143 @@
     100  f04a		       85 0d		      sta	PF0
     101  f04c		       85 0e		      sta	PF1
     102  f04e		       85 0f		      sta	PF2
-    103  f050
-    104  f050							; 192 lines of frame total
-    105  f050							;; draw first line (playfield only) then reset playfield
-    106  f050		       a9 10		      lda	#$10
-    107  f052		       85 0d		      sta	PF0
-    108  f054		       a9 00		      lda	#0
-    109  f056		       85 0e		      sta	PF1
-    110  f058		       85 0f		      sta	PF2
-    111  f05a		       85 02		      sta	WSYNC
-    112  f05c
-    113  f05c
-    114  f05c							; Loop until we hit the vertical position we want for the ball
-    115  f05c		       a6 82		      ldx	Player_Y
-    116  f05e		       ca	   VLoop      dex
-    117  f05f		       85 02		      sta	WSYNC
-    118  f061		       d0 fb		      bne	VLoop
-    119  f063
-    120  f063							; Setup for sprite drawing
-    121  f063		       a0 07		      ldy	#PLAYER_SPRITE_HEIGHT	; sprite data index
-    122  f065				   SpriteLoop
-    123  f065		       b9 d9 f0 	      lda	PLAYER_SPRITE_DATA,y
-    124  f068		       85 1b		      sta	GRP0
-    125  f06a		       b9 e1 f0 	      lda	PLAYER_COLOR_DATA,y
-    126  f06d		       85 06		      sta	COLUP0
-    127  f06f		       85 02		      sta	WSYNC
-    128  f071		       88		      dey
-    129  f072		       d0 f1		      bne	SpriteLoop
-    130  f074
-    131  f074							; Wait for next scanline then clear the sprite
-    132  f074		       85 02		      sta	WSYNC
-    133  f076		       a9 00		      lda	#0
-    134  f078		       18		      clc
-    135  f079		       85 1b		      sta	GRP0
-    136  f07b
-    137  f07b							; Close out the remaining scanlines, which will be 192-sprite height-one line for playfield top)
-    138  f07b		       a9 c0		      lda	#192
-    139  f07d		       e9 07		      sbc	#PLAYER_SPRITE_HEIGHT
-    140  f07f		       18		      clc
-    141  f080		       e5 82		      sbc	Player_Y
-    142  f082		       e5 01	   VWait      sbc	1
-    143  f084		       85 02		      sta	WSYNC
-    144  f086		       d0 fa		      bne	VWait
-    145  f088
-    146  f088							;; Draw bottom line of playfield
-    147  f088		       a9 01		      lda	#$01
-    148  f08a		       85 0a		      sta	CTRLPF
-    149  f08c		       a9 ff		      lda	#$ff
-    150  f08e		       85 08		      sta	COLUPF
-    151  f090		       85 0d		      sta	PF0
-    152  f092		       85 0e		      sta	PF1
-    153  f094		       85 0f		      sta	PF2
-    154  f096
-    155  f096							; 30 lines of overscan
-    156  f096		       a6 1e		      ldx	30
-    157  f098				   PostLoop
-    158  f098		       ca		      dex
-    159  f099		       85 02		      sta	WSYNC
-    160  f09b		       d0 fb		      bne	PostLoop
-    161  f09d
-    162  f09d							; go to next frame
-    163  f09d		       4c 13 f0 	      jmp	NextFrame
-    164  f0a0
-    165  f0a0							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    166  f0a0							; Subroutines
-    167  f0a0							;;;
-    168  f0a0
-    169  f0a0							; This subroutine checks the player one joystick and moves the player accordingly
-    170  f0a0				   CheckJoystick
-    171  f0a0		       a6 81		      ldx	Player_X
-    172  f0a2		       ad 80 02 	      lda	SWCHA
-    173  f0a5		       29 80		      and	#$80	; 1000000
-    174  f0a7		       f0 05		      beq	.SkipMoveRight	; checks bit 7 set
-    175  f0a9		       e0 03		      cpx	#PLAYER_MIN_X	; Check bounds
-    176  f0ab		       f0 0d		      beq	.SkipMoveLeft
-    177  f0ad		       ca		      dex
-    178  f0ae				   .SkipMoveRight
-    179  f0ae		       ad 80 02 	      lda	SWCHA
-    180  f0b1		       29 40		      and	#$40	; 0100000
-    181  f0b3		       f0 05		      beq	.SkipMoveLeft	; checks bit 6 set
-    182  f0b5		       e0 94		      cpx	#PLAYER_MAX_X	; Check bounds
-    183  f0b7		       f0 01		      beq	.SkipMoveLeft
-    184  f0b9		       e8		      inx
-    185  f0ba				   .SkipMoveLeft
-    186  f0ba		       86 81		      stx	Player_X
-    187  f0bc
-    188  f0bc							; Now we repeat the process but with a SWCHA that is shifted left twice, so down is
-    189  f0bc							; bit 7 and up is bit 6
-    190  f0bc		       a6 82		      ldx	Player_Y
-    191  f0be		       ad 80 02 	      lda	SWCHA
-    192  f0c1		       29 20		      and	#$20	; 00100000
-    193  f0c3		       f0 05		      beq	.SkipMoveDown	; checks bit 5 set
-    194  f0c5		       e0 01		      cpx	#PLAYER_MIN_Y	; Check bounds
-    195  f0c7		       f0 0d		      beq	.SkipMoveUp
-    196  f0c9		       ca		      dex
-    197  f0ca				   .SkipMoveDown
-    198  f0ca		       ad 80 02 	      lda	SWCHA
-    199  f0cd		       29 10		      and	#$10	; 00010000
-    200  f0cf		       f0 05		      beq	.SkipMoveUp	; checks bit 4 set
-    201  f0d1		       e0 b6		      cpx	#PLAYER_MAX_Y	; Check bounds
-    202  f0d3		       f0 01		      beq	.SkipMoveUp
-    203  f0d5		       e8		      inx
-    204  f0d6				   .SkipMoveUp
-    205  f0d6		       86 82		      stx	Player_Y
-    206  f0d8
-    207  f0d8		       60		      rts
-    208  f0d9
-    209  f0d9							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    210  f0d9							; Sprite data
-    211  f0d9							;---Graphics Data from PlayerPal 2600---
-    212  f0d9
-    213  f0d9				   PLAYER_SPRITE_DATA
-    214  f0d9		       14		      .byte.b	#%00010100	;$84
-    215  f0da		       3e		      .byte.b	#%00111110	;$84
-    216  f0db		       00		      .byte.b	#%00000000	;$F6
-    217  f0dc		       00		      .byte.b	#%00000000	;$F6
-    218  f0dd		       08		      .byte.b	#%00001000	;$F6
-    219  f0de		       00		      .byte.b	#%00000000	;$20
-    220  f0df		       22		      .byte.b	#%00100010	;$20
-    221  f0e0		       00		      .byte.b	#%00000000	;--
-    222  f0e1							;---End Graphics Data---
-    223  f0e1
-    224  f0e1
-    225  f0e1							;---Color Data from PlayerPal 2600---
-    226  f0e1
-    227  f0e1				   PLAYER_COLOR_DATA
-    228  f0e1		       54		      .byte.b	#$54	;
-    229  f0e2		       84		      .byte.b	#$84	;
-    230  f0e3		       06		      .byte.b	#$06	;
-    231  f0e4		       06		      .byte.b	#$06	;
-    232  f0e5		       06		      .byte.b	#$06	;
-    233  f0e6		       fe		      .byte.b	#$FE	;
-    234  f0e7		       fe		      .byte.b	#$FE	;
-    235  f0e8		       0e		      .byte.b	#$0E	;
-    236  f0e9							;---End Color Data---
-    237  f0e9							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    238  f0e9							; Epilogue
-    239  f0e9
+    103  f050		       85 02		      sta	WSYNC
+    104  f052
+    105  f052							; 192 lines of frame total
+    106  f052							;; draw first line (playfield only) then reset playfield
+    107  f052		       a9 10		      lda	#$10
+    108  f054		       85 0d		      sta	PF0
+    109  f056		       a9 00		      lda	#0
+    110  f058		       85 0e		      sta	PF1
+    111  f05a		       85 0f		      sta	PF2
+    112  f05c		       85 02		      sta	WSYNC
+    113  f05e
+    114  f05e							; Loop until we hit the vertical position we want for the ball
+    115  f05e		       a6 82		      ldx	Player_Y
+    116  f060		       ca	   VLoop      dex
+    117  f061		       85 02		      sta	WSYNC
+    118  f063		       d0 fb		      bne	VLoop
+    119  f065
+    120  f065							; Setup for sprite drawing
+    121  f065		       a0 07		      ldy	#PLAYER_SPRITE_HEIGHT	; sprite data index
+    122  f067				   SpriteLoop
+    123  f067		       b9 db f0 	      lda	PLAYER_SPRITE_DATA,y
+    124  f06a		       85 1b		      sta	GRP0
+    125  f06c		       b9 e3 f0 	      lda	PLAYER_COLOR_DATA,y
+    126  f06f		       85 06		      sta	COLUP0
+    127  f071		       85 02		      sta	WSYNC
+    128  f073		       88		      dey
+    129  f074		       d0 f1		      bne	SpriteLoop
+    130  f076
+    131  f076							; Wait for next scanline then clear the sprite
+    132  f076		       85 02		      sta	WSYNC
+    133  f078		       a9 00		      lda	#0
+    134  f07a		       18		      clc
+    135  f07b		       85 1b		      sta	GRP0
+    136  f07d
+    137  f07d							; Close out the remaining scanlines, which will be 192-sprite height-one line for playfield top)
+    138  f07d		       a9 c0		      lda	#192
+    139  f07f		       e9 07		      sbc	#PLAYER_SPRITE_HEIGHT
+    140  f081		       18		      clc
+    141  f082		       e5 82		      sbc	Player_Y
+    142  f084		       e5 01	   VWait      sbc	1
+    143  f086		       85 02		      sta	WSYNC
+    144  f088		       d0 fa		      bne	VWait
+    145  f08a
+    146  f08a							;; Draw bottom line of playfield
+    147  f08a		       a9 01		      lda	#$01
+    148  f08c		       85 0a		      sta	CTRLPF
+    149  f08e		       a9 ff		      lda	#$ff
+    150  f090		       85 08		      sta	COLUPF
+    151  f092		       85 0d		      sta	PF0
+    152  f094		       85 0e		      sta	PF1
+    153  f096		       85 0f		      sta	PF2
+    154  f098
+    155  f098							; 30 lines of overscan
+    156  f098		       a6 1e		      ldx	30
+    157  f09a				   PostLoop
+    158  f09a		       ca		      dex
+    159  f09b		       85 02		      sta	WSYNC
+    160  f09d		       d0 fb		      bne	PostLoop
+    161  f09f
+    162  f09f							; go to next frame
+    163  f09f		       4c 13 f0 	      jmp	NextFrame
+    164  f0a2
+    165  f0a2							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    166  f0a2							; Subroutines
+    167  f0a2							;;;
+    168  f0a2
+    169  f0a2							; This subroutine checks the player one joystick and moves the player accordingly
+    170  f0a2				   CheckJoystick
+    171  f0a2		       a6 81		      ldx	Player_X
+    172  f0a4		       ad 80 02 	      lda	SWCHA
+    173  f0a7		       29 80		      and	#$80	; 1000000
+    174  f0a9		       f0 05		      beq	.SkipMoveRight	; checks bit 7 set
+    175  f0ab		       e0 03		      cpx	#PLAYER_MIN_X	; Check bounds
+    176  f0ad		       f0 0d		      beq	.SkipMoveLeft
+    177  f0af		       ca		      dex
+    178  f0b0				   .SkipMoveRight
+    179  f0b0		       ad 80 02 	      lda	SWCHA
+    180  f0b3		       29 40		      and	#$40	; 0100000
+    181  f0b5		       f0 05		      beq	.SkipMoveLeft	; checks bit 6 set
+    182  f0b7		       e0 94		      cpx	#PLAYER_MAX_X	; Check bounds
+    183  f0b9		       f0 01		      beq	.SkipMoveLeft
+    184  f0bb		       e8		      inx
+    185  f0bc				   .SkipMoveLeft
+    186  f0bc		       86 81		      stx	Player_X
+    187  f0be
+    188  f0be							; Now we repeat the process but with a SWCHA that is shifted left twice, so down is
+    189  f0be							; bit 7 and up is bit 6
+    190  f0be		       a6 82		      ldx	Player_Y
+    191  f0c0		       ad 80 02 	      lda	SWCHA
+    192  f0c3		       29 20		      and	#$20	; 00100000
+    193  f0c5		       f0 05		      beq	.SkipMoveDown	; checks bit 5 set
+    194  f0c7		       e0 01		      cpx	#PLAYER_MIN_Y	; Check bounds
+    195  f0c9		       f0 0d		      beq	.SkipMoveUp
+    196  f0cb		       ca		      dex
+    197  f0cc				   .SkipMoveDown
+    198  f0cc		       ad 80 02 	      lda	SWCHA
+    199  f0cf		       29 10		      and	#$10	; 00010000
+    200  f0d1		       f0 05		      beq	.SkipMoveUp	; checks bit 4 set
+    201  f0d3		       e0 b6		      cpx	#PLAYER_MAX_Y	; Check bounds
+    202  f0d5		       f0 01		      beq	.SkipMoveUp
+    203  f0d7		       e8		      inx
+    204  f0d8				   .SkipMoveUp
+    205  f0d8		       86 82		      stx	Player_Y
+    206  f0da
+    207  f0da		       60		      rts
+    208  f0db
+    209  f0db							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    210  f0db							; Sprite data
+    211  f0db							;---Graphics Data from PlayerPal 2600---
+    212  f0db
+    213  f0db				   PLAYER_SPRITE_DATA
+    214  f0db		       14		      .byte.b	#%00010100	;$84
+    215  f0dc		       3e		      .byte.b	#%00111110	;$84
+    216  f0dd		       00		      .byte.b	#%00000000	;$F6
+    217  f0de		       00		      .byte.b	#%00000000	;$F6
+    218  f0df		       08		      .byte.b	#%00001000	;$F6
+    219  f0e0		       00		      .byte.b	#%00000000	;$20
+    220  f0e1		       22		      .byte.b	#%00100010	;$20
+    221  f0e2		       00		      .byte.b	#%00000000	;--
+    222  f0e3							;---End Graphics Data---
+    223  f0e3
+    224  f0e3
+    225  f0e3							;---Color Data from PlayerPal 2600---
+    226  f0e3
+    227  f0e3				   PLAYER_COLOR_DATA
+    228  f0e3		       54		      .byte.b	#$54	;
+    229  f0e4		       84		      .byte.b	#$84	;
+    230  f0e5		       06		      .byte.b	#$06	;
+    231  f0e6		       06		      .byte.b	#$06	;
+    232  f0e7		       06		      .byte.b	#$06	;
+    233  f0e8		       fe		      .byte.b	#$FE	;
+    234  f0e9		       fe		      .byte.b	#$FE	;
+    235  f0ea		       0e		      .byte.b	#$0E	;
+    236  f0eb							;---End Color Data---
+    237  f0eb							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    238  f0eb							; Epilogue
+    239  f0eb
     240  fffc					      org	$fffc
     241  fffc		       00 f0		      .word.w	Start	; reset vector
     242  fffe		       00 f0		      .word.w	Start	; BRK vector

@@ -5,10 +5,9 @@
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
 
 ;;;;; Todos!
-;;;;; Add sub-positioning horizontal
-;;;;; add square playfield with collision detection
-;;;;; add multi-line sprites
-
+;; BUG: short blank line on upper right
+;; BUG: don't think timings are right for rows?
+;; BUG: when bumping top of screen with sprite whole game "shifts" up
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
 
@@ -64,7 +63,7 @@ NextFrame
         jsr CheckJoystick
         sta WSYNC
 
-        ldx 32
+        ldx 36
 PreLoop dex
         sta WSYNC
         bne PreLoop
@@ -100,6 +99,7 @@ DivideLoop
         sta PF0
         sta PF1
         sta PF2
+        sta WSYNC
 
 ; 192 lines of frame total
         ;; draw first line (playfield only) then reset playfield
@@ -108,6 +108,7 @@ DivideLoop
         lda #0
         sta PF1
         sta PF2
+        sta WSYNC
         
 ; Loop until we hit the vertical position we want for the ball
         ldx Player_Y
