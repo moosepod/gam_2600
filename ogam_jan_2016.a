@@ -1,0 +1,144 @@
+        processor 6502
+        include "vcs.h"
+        include "macro.h"
+        include "xmacro.h"
+
+; next up -- iterate through 8 pixels before jumping to next row
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Variables segment
+
+        seg.u Variables
+        org $80
+
+Temp            .byte
+Player_X          .byte ; X position of ball sprint
+Player_Y           .byte ; Y position of ball sprite
+
+PLAYER_MAX_Y    equ  #188   ; Max Y position for ball sprite
+PLAYER_MAX_X    equ  #11    ; Max X position for ball sprite
+PLAYER_MIN_X    equ  #1    ; Min X position for ball sprite
+PLAYER_START_X  equ #8
+PLAYER_START_Y  equ #10
+PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
+PLAYER_COLOR    equ #$50 ; Color for ball
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Code segment
+
+        seg Code
+        org $f000
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Setup
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Start
+        CLEAN_START
+
+Initialize
+        lda #PLAYER_START_X
+        sta Player_X
+        lda #PLAYER_START_Y
+        sta Player_Y
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Kernel        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextFrame
+        lsr SWCHB       ; test Game Reset switch
+        bcc Start       ; reset?
+
+; 3 lines of VSYNC
+        VERTICAL_SYNC
+
+; 37 lines of underscan total
+        ; Check joysticks
+        jsr CheckJoysticks
+        sta WSYNC
+
+        ldx 34
+PreLoop dex
+        sta WSYNC
+        bne PreLoop
+
+        ; Wait for scanline after setting up loop 
+        lda PLAYER_COLOR
+        sta COLUP0
+        ldx Player_X
+        sta WSYNC
+
+        ; Loop until we're at ball X position
+HLoop   dex
+        bne HLoop
+
+        ; Set the horizontal sprite position, setup for vertical ball pos loop,
+        ; then wait for next scan line
+        sta RESP0
+        ldx Player_Y
+        sta WSYNC
+
+; 192 lines of frame total
+
+; Loop until we hit the vertical positoin we want for the ball
+VLoop   dex
+        sta WSYNC
+        bne VLoop
+
+        ; Draw the ball
+        lda #PLAYER_SPRITE
+        sta GRP0
+        sta WSYNC
+
+        ; Wait for next scanline then clear the sprite
+        sta WSYNC
+        lda #0        
+        clc
+        sta GRP0
+
+        ; Close out the remaining scanlines, which will be 192-Ball Y-1 (since we waited an extra WSYNC above)
+        lda #190
+        clc
+        sbc Player_Y
+VWait   sbc 1
+        sta WSYNC
+        bne VWait
+     
+; 30 lines of overscan
+        ldx 30
+PostLoop 
+        dex
+        sta WSYNC
+        bne PostLoop
+
+; go to next frame
+        jmp NextFrame
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Subroutines
+;;;
+
+CheckJoysticks
+        ldx Player_X
+        bit SWCHA
+        bvs .SkipMoveLeft  ; checks bit 6 set
+        cpx PLAYER_MIN_X ; Check bounds
+        beq .SkipMoveRight
+        dex
+.SkipMoveLeft
+        bit SWCHA
+        bmi .SkipMoveRight ; checks bit 7 set
+        cpx PLAYER_MAX_X ; Check bounds
+        beq .SkipMoveRight
+        inx
+.SkipMoveRight
+        stx Player_X
+
+        rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Epilogue
+
+        org $fffc
+        .word Start     ; reset vector
+        .word Start     ; BRK vector
