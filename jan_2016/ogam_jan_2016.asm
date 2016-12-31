@@ -17,7 +17,7 @@ Temp            .byte
 Player_X          .byte ; X position of ball sprint
 Player_Y           .byte ; Y position of player sprite
 
-PLAYER_MAX_Y    equ  #162   ; Max Y position for player sprite
+PLAYER_MAX_Y    equ  #155   ; Max Y position for player sprite
 PLAYER_MIN_Y    equ  #1  ; Min Y position for player sprite
 PLAYER_MAX_X    equ  #148   ; Max X position for player sprite
 PLAYER_MIN_X    equ  #3    ; Min X position for player sprite
