@@ -21,8 +21,8 @@ Player_Y           .byte ; Y position of player sprite
 
 PLAYER_MAX_Y    equ  #182   ; Max Y position for player sprite
 PLAYER_MIN_Y    equ  #1    ; Min Y position for player sprite
-PLAYER_MAX_X    equ  #152   ; Max X position for player sprite
-PLAYER_MIN_X    equ  #1    ; Min X position for player sprite
+PLAYER_MAX_X    equ  #148   ; Max X position for player sprite
+PLAYER_MIN_X    equ  #3    ; Min X position for player sprite
 PLAYER_START_X  equ #9
 PLAYER_START_Y  equ #80
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
@@ -64,12 +64,12 @@ NextFrame
         jsr CheckJoystick
         sta WSYNC
 
-        ldx 34
+        ldx 32
 PreLoop dex
         sta WSYNC
         bne PreLoop
 
-
+       
         ;;; Setup for horizontal positioning 
         lda Player_X
         sec
@@ -94,9 +94,22 @@ DivideLoop
         sta WSYNC
         sta HMOVE               ; set the fine positioning
 
-; 192 lines of frame total
+        ;; Setup first line of playfield
+        lda #$ff 
+        sta COLUPF
+        sta PF0
+        sta PF1
+        sta PF2
 
-; Loop until we hit the vertical positoin we want for the ball
+; 192 lines of frame total
+        ;; draw first line (playfield only) then reset playfield
+        lda #$10 
+        sta PF0
+        lda #0
+        sta PF1
+        sta PF2
+        
+; Loop until we hit the vertical position we want for the ball
         ldx Player_Y
 VLoop   dex
         sta WSYNC
@@ -119,7 +132,7 @@ SpriteLoop
         clc
         sta GRP0
 
-        ; Close out the remaining scanlines, which will be 192-sprite height)
+        ; Close out the remaining scanlines, which will be 192-sprite height-one line for playfield top)
         lda #192
         sbc #PLAYER_SPRITE_HEIGHT
         clc
@@ -127,6 +140,15 @@ SpriteLoop
 VWait   sbc 1
         sta WSYNC
         bne VWait
+        
+        ;; Draw bottom line of playfield
+        lda #$01
+        sta CTRLPF
+        lda #$ff 
+        sta COLUPF
+        sta PF0
+        sta PF1
+        sta PF2
      
 ; 30 lines of overscan
         ldx 30
@@ -164,7 +186,7 @@ CheckJoystick
         ; Now we repeat the process but with a SWCHA that is shifted left twice, so down is 
         ; bit 7 and up is bit 6
         ldx Player_Y
-	lda SWCHA
+        lda SWCHA
         and #$20 ; 00100000
         beq .SkipMoveDown  ; checks bit 5 set
         cpx #PLAYER_MIN_Y ; Check bounds
@@ -201,13 +223,13 @@ PLAYER_SPRITE_DATA
 ;---Color Data from PlayerPal 2600---
 
 PLAYER_COLOR_DATA
+        .byte #$54;
         .byte #$84;
-        .byte #$84;
-        .byte #$F6;
-        .byte #$F6;
-        .byte #$F6;
-        .byte #$20;
-        .byte #$20;
+        .byte #$06;
+        .byte #$06;
+        .byte #$06;
+        .byte #$FE;
+        .byte #$FE;
         .byte #$0E;
 ;---End Color Data---
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
