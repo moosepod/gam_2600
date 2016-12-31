@@ -372,36 +372,41 @@
       4  0000 ????
       5  0000 ????						;;;;; An Atari 2600 game! See http://8bitworkshop.com/
       6  0000 ????
-      7  0000 ????						;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      8  0000 ????						; Variables segment
-      9  0000 ????
-     10 U0083 ????				      seg.u	Variables
-     11 U0080					      org	$80
-     12 U0080
-     13 U0080		       00	   Temp       .byte.b
-     14 U0081		       00	   Player_X   .byte.b		; X position of ball sprint
-     15 U0082		       00	   Player_Y   .byte.b		; Y position of ball sprite
-     16 U0083
-     17 U0083		       00 bc	   PLAYER_MAX_Y equ	#188	; Max Y position for ball sprite
-     18 U0083		       00 01	   PLAYER_MIN_Y equ	#1	; Min Y position for ball sprite
-     19 U0083		       00 0d	   PLAYER_MAX_X equ	#13	; Max X position for ball sprite
-     20 U0083		       00 01	   PLAYER_MIN_X equ	#1	; Min X position for ball sprite
-     21 U0083		       00 09	   PLAYER_START_X equ	#9
-     22 U0083		       00 50	   PLAYER_START_Y equ	#80
-     23 U0083		       00 ff	   PLAYER_SPRITE equ	#$FF	; Sprite (1 line) for our ball
-     24 U0083		       00 60	   PLAYER_COLOR equ	#$60	; Color for ball
-     25 U0083
-     26 U0083							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     27 U0083							; Code segment
-     28 U0083
-     29  10000 ????				       seg	Code
-     30  f000					      org	$f000
-     31  f000
-     32  f000							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     33  f000							;;; Setup
-     34  f000							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     35  f000
-     36  f000				   Start
+      7  0000 ????						;;;;; Todos!
+      8  0000 ????						;;;;; Add sub-positioning horizontal
+      9  0000 ????						;;;;; add square playfield with collision detection
+     10  0000 ????						;;;;; add multi-line sprites
+     11  0000 ????
+     12  0000 ????						;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     13  0000 ????						; Variables segment
+     14  0000 ????
+     15 U0083 ????				      seg.u	Variables
+     16 U0080					      org	$80
+     17 U0080
+     18 U0080		       00	   Temp       .byte.b
+     19 U0081		       00	   Player_X   .byte.b		; X position of ball sprint
+     20 U0082		       00	   Player_Y   .byte.b		; Y position of ball sprite
+     21 U0083
+     22 U0083		       00 bc	   PLAYER_MAX_Y equ	#188	; Max Y position for ball sprite
+     23 U0083		       00 01	   PLAYER_MIN_Y equ	#1	; Min Y position for ball sprite
+     24 U0083		       00 98	   PLAYER_MAX_X equ	#152	; Max X position for ball sprite
+     25 U0083		       00 01	   PLAYER_MIN_X equ	#1	; Min X position for ball sprite
+     26 U0083		       00 09	   PLAYER_START_X equ	#9
+     27 U0083		       00 50	   PLAYER_START_Y equ	#80
+     28 U0083		       00 ff	   PLAYER_SPRITE equ	#$FF	; Sprite (1 line) for our ball
+     29 U0083		       00 60	   PLAYER_COLOR equ	#$60	; Color for ball
+     30 U0083
+     31 U0083							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     32 U0083							; Code segment
+     33 U0083
+     34  10000 ????				       seg	Code
+     35  f000					      org	$f000
+     36  f000
+     37  f000							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     38  f000							;;; Setup
+     39  f000							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     40  f000
+     41  f000				   Start
       0  f000					      CLEAN_START
       1  f000		       78		      sei
       2  f001		       d8		      cld
@@ -414,138 +419,149 @@
       9  f008		       48		      pha
      10  f009		       d0 fb		      bne	.CLEAR_STACK
      11  f00b
-     38  f00b
-     39  f00b				   Initialize
-     40  f00b		       a9 09		      lda	#PLAYER_START_X
-     41  f00d		       85 81		      sta	Player_X
-     42  f00f		       a9 50		      lda	#PLAYER_START_Y
-     43  f011		       85 82		      sta	Player_Y
-     44  f013
-     45  f013							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     46  f013							;;; Kernel
-     47  f013							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     48  f013
-     49  f013				   NextFrame
-     50  f013		       4e 82 02 	      lsr	SWCHB	; test Game Reset switch
-     51  f016		       90 e8		      bcc	Start	; reset?
-     52  f018
-     53  f018							; 3 lines of VSYNC
+     43  f00b
+     44  f00b				   Initialize
+     45  f00b		       a9 09		      lda	#PLAYER_START_X
+     46  f00d		       85 81		      sta	Player_X
+     47  f00f		       a9 50		      lda	#PLAYER_START_Y
+     48  f011		       85 82		      sta	Player_Y
+     49  f013
+     50  f013							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     51  f013							;;; Kernel
+     52  f013							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     53  f013
+     54  f013				   NextFrame
+     55  f013		       4e 82 02 	      lsr	SWCHB	; test Game Reset switch
+     56  f016		       90 e8		      bcc	Start	; reset?
+     57  f018
+     58  f018							; 3 lines of VSYNC
       0  f018					      VERTICAL_SYNC
       1  f018		       a9 0e		      lda	#%1110
       2  f01a		       85 02	   .VSLP1     sta	WSYNC
       3  f01c		       85 00		      sta	VSYNC
       4  f01e		       4a		      lsr
       5  f01f		       d0 f9		      bne	.VSLP1
-     55  f021
-     56  f021							; 37 lines of underscan total
-     57  f021							; Check joysticks
-     58  f021		       20 65 f0 	      jsr	CheckJoystick
-     59  f024		       85 02		      sta	WSYNC
-     60  f026
-     61  f026		       a6 22		      ldx	34
-     62  f028		       ca	   PreLoop    dex
-     63  f029		       85 02		      sta	WSYNC
-     64  f02b		       d0 fb		      bne	PreLoop
-     65  f02d
-     66  f02d							; Wait for scanline after setting up loop
-     67  f02d		       a5 60		      lda	PLAYER_COLOR
-     68  f02f		       85 06		      sta	COLUP0
-     69  f031		       a6 81		      ldx	Player_X
-     70  f033		       85 02		      sta	WSYNC
-     71  f035
-     72  f035							; Loop until we're at ball X position
-     73  f035		       ca	   HLoop      dex
-     74  f036		       d0 fd		      bne	HLoop
-     75  f038
-     76  f038							; Set the horizontal sprite position, setup for vertical ball pos loop,
-     77  f038							; then wait for next scan line
-     78  f038		       85 10		      sta	RESP0
-     79  f03a		       a6 82		      ldx	Player_Y
-     80  f03c		       85 02		      sta	WSYNC
-     81  f03e
-     82  f03e							; 192 lines of frame total
-     83  f03e
-     84  f03e							; Loop until we hit the vertical positoin we want for the ball
-     85  f03e		       ca	   VLoop      dex
-     86  f03f		       85 02		      sta	WSYNC
-     87  f041		       d0 fb		      bne	VLoop
-     88  f043
-     89  f043							; Draw the ball
-     90  f043		       a9 ff		      lda	#PLAYER_SPRITE
-     91  f045		       85 1b		      sta	GRP0
-     92  f047		       85 02		      sta	WSYNC
-     93  f049
-     94  f049							; Wait for next scanline then clear the sprite
-     95  f049		       85 02		      sta	WSYNC
-     96  f04b		       a9 00		      lda	#0
-     97  f04d		       18		      clc
-     98  f04e		       85 1b		      sta	GRP0
-     99  f050
-    100  f050							; Close out the remaining scanlines, which will be 192-Ball Y-1 (since we waited an extra WSYNC above)
-    101  f050		       a9 be		      lda	#190
-    102  f052		       18		      clc
-    103  f053		       e5 82		      sbc	Player_Y
-    104  f055		       e5 01	   VWait      sbc	1
-    105  f057		       85 02		      sta	WSYNC
-    106  f059		       d0 fa		      bne	VWait
-    107  f05b
-    108  f05b							; 30 lines of overscan
-    109  f05b		       a6 1e		      ldx	30
-    110  f05d				   PostLoop
-    111  f05d		       ca		      dex
-    112  f05e		       85 02		      sta	WSYNC
-    113  f060		       d0 fb		      bne	PostLoop
-    114  f062
-    115  f062							; go to next frame
-    116  f062		       4c 13 f0 	      jmp	NextFrame
-    117  f065
-    118  f065							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    119  f065							; Subroutines
-    120  f065							;;;
-    121  f065
-    122  f065							; This subroutine checks the player one joystick and moves the player accordingly
-    123  f065				   CheckJoystick
-    124  f065		       a6 81		      ldx	Player_X
-    125  f067		       ad 80 02 	      lda	SWCHA
-    126  f06a		       29 80		      and	#$80	; 1000000
-    127  f06c		       f0 05		      beq	.SkipMoveRight	; checks bit 7 set
-    128  f06e		       e0 01		      cpx	#PLAYER_MIN_X	; Check bounds
-    129  f070		       f0 0d		      beq	.SkipMoveLeft
-    130  f072		       ca		      dex
-    131  f073				   .SkipMoveRight
-    132  f073		       ad 80 02 	      lda	SWCHA
-    133  f076		       29 40		      and	#$40	; 0100000
-    134  f078		       f0 05		      beq	.SkipMoveLeft	; checks bit 6 set
-    135  f07a		       e0 0d		      cpx	#PLAYER_MAX_X	; Check bounds
-    136  f07c		       f0 01		      beq	.SkipMoveLeft
-    137  f07e		       e8		      inx
-    138  f07f				   .SkipMoveLeft
-    139  f07f		       86 81		      stx	Player_X
-    140  f081
-    141  f081							; Now we repeat the process but with a SWCHA that is shifted left twice, so down is
-    142  f081							; bit 7 and up is bit 6
-    143  f081		       a6 82		      ldx	Player_Y
-    144  f083		       ad 80 02 	      lda	SWCHA
-    145  f086		       29 20		      and	#$20	; 00100000
-    146  f088		       f0 05		      beq	.SkipMoveDown	; checks bit 5 set
-    147  f08a		       e0 01		      cpx	#PLAYER_MIN_Y	; Check bounds
-    148  f08c		       f0 0d		      beq	.SkipMoveUp
-    149  f08e		       ca		      dex
-    150  f08f				   .SkipMoveDown
-    151  f08f		       ad 80 02 	      lda	SWCHA
-    152  f092		       29 10		      and	#$10	; 00010000
-    153  f094		       f0 05		      beq	.SkipMoveUp	; checks bit 4 set
-    154  f096		       e0 bc		      cpx	#PLAYER_MAX_Y	; Check bounds
-    155  f098		       f0 01		      beq	.SkipMoveUp
-    156  f09a		       e8		      inx
-    157  f09b				   .SkipMoveUp
-    158  f09b		       86 82		      stx	Player_Y
-    159  f09d
-    160  f09d		       60		      rts
-    161  f09e
-    162  f09e							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    163  f09e							; Epilogue
-    164  f09e
-    165  fffc					      org	$fffc
-    166  fffc		       00 f0		      .word.w	Start	; reset vector
-    167  fffe		       00 f0		      .word.w	Start	; BRK vector
+     60  f021
+     61  f021							; 37 lines of underscan total
+     62  f021							; Check joysticks
+     63  f021		       20 73 f0 	      jsr	CheckJoystick
+     64  f024		       85 02		      sta	WSYNC
+     65  f026
+     66  f026		       a6 22		      ldx	34
+     67  f028		       ca	   PreLoop    dex
+     68  f029		       85 02		      sta	WSYNC
+     69  f02b		       d0 fb		      bne	PreLoop
+     70  f02d
+     71  f02d							; Wait for scanline after setting up loop
+     72  f02d		       a5 60		      lda	PLAYER_COLOR
+     73  f02f		       85 06		      sta	COLUP0
+     74  f031		       a5 81		      lda	Player_X
+     75  f033		       38		      sec
+     76  f034		       85 02		      sta	WSYNC
+     77  f036		       85 2b		      sta	HMCLR	; Clear old horizontal pos
+     78  f038
+     79  f038							; Divide the X position by 15, the # of TIA color clocks per loop
+     80  f038				   DivideLoop
+     81  f038		       e9 0f		      sbc	#15
+     82  f03a		       b0 fc		      bcs	DivideLoop
+     83  f03c
+     84  f03c							; A will contain remainder of division. Convert to fine adjust
+     85  f03c							; which is -7 to +8
+     86  f03c		       49 07		      eor	#7	; calcs (23-A) % 16
+     87  f03e		       0a		      asl
+     88  f03f		       0a		      asl
+     89  f040		       0a		      asl
+     90  f041		       0a		      asl
+     91  f042		       85 20		      sta	HMP0	; set the fine position
+     92  f044
+     93  f044		       85 10		      sta	RESP0	; set the coarse position
+     94  f046		       85 02		      sta	WSYNC
+     95  f048		       85 2a		      sta	HMOVE	; set the fine positioning
+     96  f04a
+     97  f04a							; 192 lines of frame total
+     98  f04a
+     99  f04a							; Loop until we hit the vertical positoin we want for the ball
+    100  f04a		       a6 82		      ldx	Player_Y
+    101  f04c		       ca	   VLoop      dex
+    102  f04d		       85 02		      sta	WSYNC
+    103  f04f		       d0 fb		      bne	VLoop
+    104  f051
+    105  f051							; Draw the ball
+    106  f051		       a9 ff		      lda	#PLAYER_SPRITE
+    107  f053		       85 1b		      sta	GRP0
+    108  f055		       85 02		      sta	WSYNC
+    109  f057
+    110  f057							; Wait for next scanline then clear the sprite
+    111  f057		       85 02		      sta	WSYNC
+    112  f059		       a9 00		      lda	#0
+    113  f05b		       18		      clc
+    114  f05c		       85 1b		      sta	GRP0
+    115  f05e
+    116  f05e							; Close out the remaining scanlines, which will be 192-Ball Y-1 (since we waited an extra WSYNC above)
+    117  f05e		       a9 be		      lda	#190
+    118  f060		       18		      clc
+    119  f061		       e5 82		      sbc	Player_Y
+    120  f063		       e5 01	   VWait      sbc	1
+    121  f065		       85 02		      sta	WSYNC
+    122  f067		       d0 fa		      bne	VWait
+    123  f069
+    124  f069							; 30 lines of overscan
+    125  f069		       a6 1e		      ldx	30
+    126  f06b				   PostLoop
+    127  f06b		       ca		      dex
+    128  f06c		       85 02		      sta	WSYNC
+    129  f06e		       d0 fb		      bne	PostLoop
+    130  f070
+    131  f070							; go to next frame
+    132  f070		       4c 13 f0 	      jmp	NextFrame
+    133  f073
+    134  f073							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    135  f073							; Subroutines
+    136  f073							;;;
+    137  f073
+    138  f073							; This subroutine checks the player one joystick and moves the player accordingly
+    139  f073				   CheckJoystick
+    140  f073		       a6 81		      ldx	Player_X
+    141  f075		       ad 80 02 	      lda	SWCHA
+    142  f078		       29 80		      and	#$80	; 1000000
+    143  f07a		       f0 05		      beq	.SkipMoveRight	; checks bit 7 set
+    144  f07c		       e0 01		      cpx	#PLAYER_MIN_X	; Check bounds
+    145  f07e		       f0 0d		      beq	.SkipMoveLeft
+    146  f080		       ca		      dex
+    147  f081				   .SkipMoveRight
+    148  f081		       ad 80 02 	      lda	SWCHA
+    149  f084		       29 40		      and	#$40	; 0100000
+    150  f086		       f0 05		      beq	.SkipMoveLeft	; checks bit 6 set
+    151  f088		       e0 98		      cpx	#PLAYER_MAX_X	; Check bounds
+    152  f08a		       f0 01		      beq	.SkipMoveLeft
+    153  f08c		       e8		      inx
+    154  f08d				   .SkipMoveLeft
+    155  f08d		       86 81		      stx	Player_X
+    156  f08f
+    157  f08f							; Now we repeat the process but with a SWCHA that is shifted left twice, so down is
+    158  f08f							; bit 7 and up is bit 6
+    159  f08f		       a6 82		      ldx	Player_Y
+    160  f091		       ad 80 02 	      lda	SWCHA
+    161  f094		       29 20		      and	#$20	; 00100000
+    162  f096		       f0 05		      beq	.SkipMoveDown	; checks bit 5 set
+    163  f098		       e0 01		      cpx	#PLAYER_MIN_Y	; Check bounds
+    164  f09a		       f0 0d		      beq	.SkipMoveUp
+    165  f09c		       ca		      dex
+    166  f09d				   .SkipMoveDown
+    167  f09d		       ad 80 02 	      lda	SWCHA
+    168  f0a0		       29 10		      and	#$10	; 00010000
+    169  f0a2		       f0 05		      beq	.SkipMoveUp	; checks bit 4 set
+    170  f0a4		       e0 bc		      cpx	#PLAYER_MAX_Y	; Check bounds
+    171  f0a6		       f0 01		      beq	.SkipMoveUp
+    172  f0a8		       e8		      inx
+    173  f0a9				   .SkipMoveUp
+    174  f0a9		       86 82		      stx	Player_Y
+    175  f0ab
+    176  f0ab		       60		      rts
+    177  f0ac
+    178  f0ac							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    179  f0ac							; Epilogue
+    180  f0ac
+    181  fffc					      org	$fffc
+    182  fffc		       00 f0		      .word.w	Start	; reset vector
+    183  fffe		       00 f0		      .word.w	Start	; BRK vector

@@ -4,6 +4,11 @@
 
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
 
+;;;;; Todos!
+;;;;; Add sub-positioning horizontal
+;;;;; add square playfield with collision detection
+;;;;; add multi-line sprites
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
 
@@ -16,7 +21,7 @@ Player_Y           .byte ; Y position of ball sprite
 
 PLAYER_MAX_Y    equ  #188   ; Max Y position for ball sprite
 PLAYER_MIN_Y    equ  #1    ; Min Y position for ball sprite
-PLAYER_MAX_X    equ  #13    ; Max X position for ball sprite
+PLAYER_MAX_X    equ  #152   ; Max X position for ball sprite
 PLAYER_MIN_X    equ  #1    ; Min X position for ball sprite
 PLAYER_START_X  equ #9
 PLAYER_START_Y  equ #80
@@ -66,22 +71,33 @@ PreLoop dex
         ; Wait for scanline after setting up loop 
         lda PLAYER_COLOR
         sta COLUP0
-        ldx Player_X
+        lda Player_X
+        sec
         sta WSYNC
+        sta HMCLR ; Clear old horizontal pos
 
-        ; Loop until we're at ball X position
-HLoop   dex
-        bne HLoop
+        ; Divide the X position by 15, the # of TIA color clocks per loop
+DivideLoop
+        sbc #15
+        bcs DivideLoop
 
-        ; Set the horizontal sprite position, setup for vertical ball pos loop,
-        ; then wait for next scan line
-        sta RESP0
-        ldx Player_Y
+        ; A will contain remainder of division. Convert to fine adjust
+        ; which is -7 to +8
+        eor #7  ; calcs (23-A) % 16
+        asl
+        asl
+        asl
+        asl
+        sta HMP0                ; set the fine position
+
+        sta RESP0               ; set the coarse position
         sta WSYNC
+        sta HMOVE               ; set the fine positioning
 
 ; 192 lines of frame total
 
 ; Loop until we hit the vertical positoin we want for the ball
+        ldx Player_Y
 VLoop   dex
         sta WSYNC
         bne VLoop
@@ -90,7 +106,7 @@ VLoop   dex
         lda #PLAYER_SPRITE
         sta GRP0
         sta WSYNC
-
+        
         ; Wait for next scanline then clear the sprite
         sta WSYNC
         lda #0        
