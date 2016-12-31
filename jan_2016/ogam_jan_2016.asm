@@ -6,8 +6,6 @@
 
 ;;;;; Todos!
 ;;; convert to timers!
-;; BUG: short blank line on upper right (caused by HMOV this moves playfield apparently)
-;; BUG: don't think timings are right for rows?
 ;; BUG: when bumping top of screen with sprite whole game "shifts" up
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
@@ -19,8 +17,8 @@ Temp            .byte
 Player_X          .byte ; X position of ball sprint
 Player_Y           .byte ; Y position of player sprite
 
-PLAYER_MAX_Y    equ  #182   ; Max Y position for player sprite
-PLAYER_MIN_Y    equ  #1    ; Min Y position for player sprite
+PLAYER_MAX_Y    equ  #162   ; Max Y position for player sprite
+PLAYER_MIN_Y    equ  #1  ; Min Y position for player sprite
 PLAYER_MAX_X    equ  #148   ; Max X position for player sprite
 PLAYER_MIN_X    equ  #3    ; Min X position for player sprite
 PLAYER_START_X  equ #9
@@ -28,6 +26,10 @@ PLAYER_START_Y  equ #80
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
+
+SCOREBOARD_HEIGHT equ #15
+TOP_BORDER_HEIGHT equ #5
+BORDER_COLOR equ #$51 ; last bit has to be 1 to do playfield reflection
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -63,36 +65,26 @@ NextFrame
         ; Check joysticks
         jsr CheckJoystick
         sta WSYNC
+        lda #$00
+        sta COLUPF
 
+        jsr PositionPlayerX
         ldx 36
 PreLoop dex
         sta WSYNC
         bne PreLoop
         
-        ;; Setup first line of playfield
-        lda #$ff 
-        sta COLUPF
-        sta PF0
-        sta PF1
-        sta PF2
-        sta WSYNC
-
 ; 192 lines of frame total
-        ;; draw first line (playfield only) then reset playfield
-        lda #$10 
-        sta PF0
-        lda #0
-        sta PF1
-        sta PF2
-        sta WSYNC
-        
-; Loop until we hit the vertical position we want for the ball
+        ;; Setup first lines of playfield
+        jsr DrawScoreboardAndTop
+
+; Loop until we hit the vertical position we want for the ball. Note
+; position is offset several lines from the top that act as buffer/scoreboard area
+
         ldx Player_Y
 VLoop   dex
         sta WSYNC
         bne VLoop
-
-        jsr PositionPlayerX
 
         ; Setup for sprite drawing
         ldy #PLAYER_SPRITE_HEIGHT  ; sprite data index
@@ -105,10 +97,11 @@ SpriteLoop
         dey
         bne SpriteLoop
        
-
         ; Close out the remaining scanlines, which will be 192-sprite height-one line for playfield top)
         lda #192
         sbc #PLAYER_SPRITE_HEIGHT
+        sbc #TOP_BORDER_HEIGHT
+        sbc #SCOREBOARD_HEIGHT
         clc
         sbc Player_Y
 VWait   sbc 1
@@ -116,10 +109,9 @@ VWait   sbc 1
         bne VWait
         
         ;; Draw bottom line of playfield
-        lda #$01
+        lda #BORDER_COLOR
         sta CTRLPF
         lda #$ff 
-        sta COLUPF
         sta PF0
         sta PF1
         sta PF2
@@ -137,6 +129,36 @@ PostLoop
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Subroutines
 ;;;
+
+DrawScoreboardAndTop
+        ldx #SCOREBOARD_HEIGHT
+.Timer
+        dex
+        sta WSYNC
+        bne .Timer
+        
+        ; Draw  
+        lda #BORDER_COLOR 
+        sta COLUPF
+        lda #$ff 
+        sta PF0
+        sta PF1
+        sta PF2
+        
+        ldx #TOP_BORDER_HEIGHT
+.Timer2
+        dex
+        sta WSYNC
+        bne .Timer2
+        
+        ;; draw first line (playfield only) then reset playfield
+        lda #$10 
+        sta PF0
+        lda #0
+        sta PF1
+        sta PF2
+        
+        rts
 
 ; Handle the (very timing dependent) adjustment of X position for the player
 PositionPlayerX
