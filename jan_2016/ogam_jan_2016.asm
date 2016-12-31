@@ -5,7 +5,8 @@
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
 
 ;;;;; Todos!
-;; BUG: short blank line on upper right
+;;; convert to timers!
+;; BUG: short blank line on upper right (caused by HMOV this moves playfield apparently)
 ;; BUG: don't think timings are right for rows?
 ;; BUG: when bumping top of screen with sprite whole game "shifts" up
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -26,7 +27,7 @@ PLAYER_START_X  equ #9
 PLAYER_START_Y  equ #80
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
-PLAYER_SPRITE_HEIGHT equ #7 ; this is really 1 less than the sprite height
+PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -67,32 +68,7 @@ NextFrame
 PreLoop dex
         sta WSYNC
         bne PreLoop
-
-       
-        ;;; Setup for horizontal positioning 
-        lda Player_X
-        sec
-        sta WSYNC
-        sta HMCLR ; Clear old horizontal pos
-
-        ; Divide the X position by 15, the # of TIA color clocks per loop
-DivideLoop
-        sbc #15
-        bcs DivideLoop
-
-        ; A will contain remainder of division. Convert to fine adjust
-        ; which is -7 to +8
-        eor #7  ; calcs (23-A) % 16
-        asl
-        asl
-        asl
-        asl
-        sta HMP0                ; set the fine position
-
-        sta RESP0               ; set the coarse position
-        sta WSYNC
-        sta HMOVE               ; set the fine positioning
-
+        
         ;; Setup first line of playfield
         lda #$ff 
         sta COLUPF
@@ -116,6 +92,8 @@ VLoop   dex
         sta WSYNC
         bne VLoop
 
+        jsr PositionPlayerX
+
         ; Setup for sprite drawing
         ldy #PLAYER_SPRITE_HEIGHT  ; sprite data index
 SpriteLoop
@@ -127,11 +105,6 @@ SpriteLoop
         dey
         bne SpriteLoop
        
-        ; Wait for next scanline then clear the sprite
-        sta WSYNC
-        lda #0        
-        clc
-        sta GRP0
 
         ; Close out the remaining scanlines, which will be 192-sprite height-one line for playfield top)
         lda #192
@@ -164,6 +137,33 @@ PostLoop
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Subroutines
 ;;;
+
+; Handle the (very timing dependent) adjustment of X position for the player
+PositionPlayerX
+        lda Player_X
+        sec
+        sta WSYNC
+        sta HMCLR ; Clear old horizontal pos
+
+        ; Divide the X position by 15, the # of TIA color clocks per loop
+DivideLoop
+        sbc #15
+        bcs DivideLoop
+
+        ; A will contain remainder of division. Convert to fine adjust
+        ; which is -7 to +8
+        eor #7  ; calcs (23-A) % 16
+        asl
+        asl
+        asl
+        asl
+        sta HMP0                ; set the fine position
+
+        sta RESP0               ; set the coarse position
+        sta WSYNC
+        sta HMOVE               ; set the fine positioning
+
+        rts
 
 ; This subroutine checks the player one joystick and moves the player accordingly
 CheckJoystick
@@ -210,6 +210,8 @@ CheckJoystick
 ;---Graphics Data from PlayerPal 2600---
 
 PLAYER_SPRITE_DATA
+        .byte #%00000000;--
+        .byte #%00000000;--
         .byte #%00010100;$84
         .byte #%00111110;$84
         .byte #%00000000;$F6
@@ -231,6 +233,7 @@ PLAYER_COLOR_DATA
         .byte #$06;
         .byte #$FE;
         .byte #$FE;
+        .byte #$0E;
         .byte #$0E;
 ;---End Color Data---
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
