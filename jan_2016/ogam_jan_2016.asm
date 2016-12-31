@@ -22,7 +22,7 @@ PLAYER_MIN_Y    equ  #1  ; Min Y position for player sprite
 PLAYER_MAX_X    equ  #148   ; Max X position for player sprite
 PLAYER_MIN_X    equ  #3    ; Min X position for player sprite
 PLAYER_START_X  equ #9
-PLAYER_START_Y  equ #80
+PLAYER_START_Y  equ #1
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
@@ -68,15 +68,17 @@ NextFrame
         lda #$00
         sta COLUPF
 
-        jsr PositionPlayerX
-        ldx 36
+        jsr PositionPlayerX ; 2 wsyncs
+        ldx #34 
 PreLoop dex
         sta WSYNC
         bne PreLoop
         
 ; 192 lines of frame total
         ;; Setup first lines of playfield
+        nop
         jsr DrawScoreboardAndTop
+        sta WSYNC
 
 ; Loop until we hit the vertical position we want for the ball. Note
 ; position is offset several lines from the top that act as buffer/scoreboard area
@@ -97,12 +99,13 @@ SpriteLoop
         dey
         bne SpriteLoop
        
-        ; Close out the remaining scanlines, which will be 192-sprite height-one line for playfield top)
-        lda #192
+        ; Close out the remaining scanlines
+        lda #191   ; 192 - 1 wsyncs post scoreboard
+        sec
         sbc #PLAYER_SPRITE_HEIGHT
         sbc #TOP_BORDER_HEIGHT
+        sbc #TOP_BORDER_HEIGHT ; 2x, one for top, one for bottom
         sbc #SCOREBOARD_HEIGHT
-        clc
         sbc Player_Y
 VWait   sbc 1
         sta WSYNC
@@ -115,15 +118,29 @@ VWait   sbc 1
         sta PF0
         sta PF1
         sta PF2
+
+        ldx #TOP_BORDER_HEIGHT
+        clc
+BottomLoop
+        dex
+        sta WSYNC
+        bne BottomLoop
+        
+        lda #0
+        sta PF0
+        sta PF1
+        sta PF2
      
 ; 30 lines of overscan
-        ldx 30
+        ldx #30
+        clc
 PostLoop 
         dex
         sta WSYNC
         bne PostLoop
 
 ; go to next frame
+        nop
         jmp NextFrame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
