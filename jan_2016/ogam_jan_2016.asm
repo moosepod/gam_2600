@@ -6,7 +6,6 @@
 
 ;;;;; Todos!
 ;;; convert to timers!
-;; BUG: when bumping top of screen with sprite whole game "shifts" up
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
 
@@ -64,7 +63,6 @@ NextFrame
 ; 37 lines of underscan total
         ; Check joysticks
         jsr CheckJoystick
-        sta WSYNC
         lda #$00
         sta COLUPF
 
@@ -222,7 +220,6 @@ CheckJoystick
         inx
 .SkipMoveLeft
         stx Player_X
-
         ; Now we repeat the process but with a SWCHA that is shifted left twice, so down is 
         ; bit 7 and up is bit 6
         ldx Player_Y
