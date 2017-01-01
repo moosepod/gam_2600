@@ -62,6 +62,7 @@ NextFrame
 
 ; 37 lines of underscan total
         ; Check joysticks
+        nop
         jsr CheckJoystick
         lda #$00
         sta COLUPF
