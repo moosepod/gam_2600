@@ -34,14 +34,12 @@ PF_wait_counter          .byte
 PF_frame_counter          .byte
 
 PLAYER_START_X  equ #7
-PLAYER_START_Y  equ #167
+PLAYER_START_Y  equ #164
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
 PLAYFIELD_BLOCK_HEIGHT equ #8
-PLAYFIELD_ROWS equ #17
-
-SCOREBOARD_HEIGHT equ #15
+PLAYFIELD_ROWS equ #22
 
 MAX_Y equ #167 ; Must be 192 - scoreboard - border - 2 (buffer, unclear why)
 MIN_Y equ #17  ; Must be border height + sprite height + 1 (buffer, unclear why)
@@ -106,7 +104,13 @@ PreLoop dex
 Drawing
         ;; We will use y to track our current scanline. 
         ldy #192
-        jsr DrawScoreboardAndTop
+        ; Draw  
+        lda #BORDER_COLOR 
+        sta COLUPF
+        lda #$00 
+        sta PF0
+        sta PF1
+        sta PF2
 
 ; Loop until we hit the vertical position we want for the player. 
         ; This first part makes sure the sprite doesn't move past the boundary. Collision detection
@@ -196,24 +200,6 @@ DrawPlayfield
         ldy PF_tmpY
         rts
 
-DrawScoreboardAndTop
-        ldx #SCOREBOARD_HEIGHT
-.Timer
-        dey ; keep track of our lines
-        dex
-        sta WSYNC
-        bne .Timer
-        
-        ; Draw  
-        lda #BORDER_COLOR 
-        sta COLUPF
-        lda #$ff 
-        sta PF0
-        sta PF1
-        sta PF2
-        
-        
-        rts
 
 ; Handle the (very timing dependent) adjustment of X position for the player
 PositionPlayerX
@@ -327,6 +313,8 @@ PLAYER_COLOR_DATA
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PFData0
+        .byte #%00000000
+        .byte #%00000000
         .byte #%11110000
         .byte #%10010000
         .byte #%01010000
@@ -344,8 +332,12 @@ PFData0
         .byte #%01010000
         .byte #%11110000
         .byte #%00000000
-
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
 PFData1
+        .byte #%00000000
+        .byte #%00000000
         .byte #%11111111
         .byte #%10100000
         .byte #%10101111
@@ -363,8 +355,13 @@ PFData1
         .byte #%00001010
         .byte #%11111111
         .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
 
 PFData2
+        .byte #%00000000
+        .byte #%00000000
         .byte #%11111111
         .byte #%00000000
         .byte #%11111100
@@ -382,7 +379,9 @@ PFData2
         .byte #%10001011
         .byte #%11111111
         .byte #%00000000
-
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
 
 
 
