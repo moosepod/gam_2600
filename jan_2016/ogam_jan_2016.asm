@@ -5,29 +5,37 @@
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
 
 ;;;;; Todos!
-;;; convert to timers!
+;;; use total line counter instead of piecemeil
+;;; use collision check instead of Y check for walls
+;;; add "map" using playfield
+;;; add "prize" on map
+;;; can capture prize by touching prize
+;;; show text on prize capture
+;;; multiple maps 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
 
         seg.u Variables
         org $80
 
-Temp            .byte
-Player_X          .byte ; X position of ball sprint
-Player_Y           .byte ; Y position of player sprite
+Temp                    .byte
+Player_X                .byte ; X position of ball sprint
+Player_Y                .byte ; Y position of player sprite. 
+                              ; Note Y-positions are measured from _bottom_ of screen and increase going up
 
-PLAYER_MAX_Y    equ  #155   ; Max Y position for player sprite
-PLAYER_MIN_Y    equ  #1  ; Min Y position for player sprite
-PLAYER_MAX_X    equ  #148   ; Max X position for player sprite
-PLAYER_MIN_X    equ  #3    ; Min X position for player sprite
+Player_X_Tmp            .byte 
+Player_Y_Tmp            .byte 
+
 PLAYER_START_X  equ #9
-PLAYER_START_Y  equ #1
+PLAYER_START_Y  equ #150
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
 
 SCOREBOARD_HEIGHT equ #15
-TOP_BORDER_HEIGHT equ #5
+BORDER_HEIGHT equ #8
+TOTAL_TOP_HEIGHT equ #23
+
 BORDER_COLOR equ #$51 ; last bit has to be 1 to do playfield reflection
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -46,8 +54,10 @@ Start
 Initialize
         lda #PLAYER_START_X
         sta Player_X
+        sta Player_X_Tmp
         lda #PLAYER_START_Y
         sta Player_Y
+        sta Player_Y_Tmp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Kernel        
@@ -60,57 +70,71 @@ NextFrame
 ; 3 lines of VSYNC
         VERTICAL_SYNC
 
-; 37 lines of underscan total
+;;
+;; 37 lines of underscan total
+;;
         ; Check joysticks
-        nop
         jsr CheckJoystick
+        sta WSYNC ; this will commit to 1 scanline
         lda #$00
         sta COLUPF
 
-        jsr PositionPlayerX ; 2 wsyncs
-        ldx #34 
+        jsr PositionPlayerX ; 2 scanlines
+        ldx #33 
 PreLoop dex
         sta WSYNC
         bne PreLoop
         
-; 192 lines of frame total
-        ;; Setup first lines of playfield
-        nop
+;;
+;; 192 lines of frame total
+;;
+        ;; We will use y to track our current scanline. 
+        ldy #192
         jsr DrawScoreboardAndTop
         sta WSYNC
+        dey ; matches WSYNC, keeps track of line
 
-; Loop until we hit the vertical position we want for the ball. Note
-; position is offset several lines from the top that act as buffer/scoreboard area
+; Loop until we hit the vertical position we want for the player. 
+        ; This first part makes sure the sprite doesn't move past the boundary. Collision detection
+        ; should be catching this but there's a line where it does not. This should be refactored.      
+        lda #191
+        sbc #TOTAL_TOP_HEIGHT
+        cmp Player_Y
+        beq SkipVLoop
+        bcc SkipVLoop ; Skip timing break below if Y is already below our top
+        lda #BORDER_HEIGHT
+        cmp Player_Y
+        beq SkipVLoop ; Skip timing break below if Y is already below our top
 
-        ldx Player_Y
-VLoop   dex
+VLoop   dey
         sta WSYNC
+        cpy Player_Y
         bne VLoop
 
+; Draw the player sprite
+SkipVLoop
         ; Setup for sprite drawing
-        ldy #PLAYER_SPRITE_HEIGHT  ; sprite data index
+        ldx #PLAYER_SPRITE_HEIGHT  ; sprite data index
 SpriteLoop
-        lda PLAYER_SPRITE_DATA,y
+        lda PLAYER_SPRITE_DATA,x
         sta GRP0
-        lda PLAYER_COLOR_DATA,y
+        lda PLAYER_COLOR_DATA,x
         sta COLUP0
         sta WSYNC
-        dey
+        dey ; track scanlines
+        dex
         bne SpriteLoop
        
-        ; Close out the remaining scanlines
-        lda #191   ; 192 - 1 wsyncs post scoreboard
-        sec
-        sbc #PLAYER_SPRITE_HEIGHT
-        sbc #TOP_BORDER_HEIGHT
-        sbc #TOP_BORDER_HEIGHT ; 2x, one for top, one for bottom
-        sbc #SCOREBOARD_HEIGHT
-        sbc Player_Y
-VWait   sbc 1
+        ; Loop until we are at BORDER_HEIGHT, meaning all scan lines processed except for the bottom
+        cpy #BORDER_HEIGHT
+        beq DrawBottomBorder
+VWait   dey
+        cpy #BORDER_HEIGHT
         sta WSYNC
         bne VWait
         
         ;; Draw bottom line of playfield
+DrawBottomBorder
         lda #BORDER_COLOR
         sta CTRLPF
         lda #$ff 
@@ -118,8 +142,7 @@ VWait   sbc 1
         sta PF1
         sta PF2
 
-        ldx #TOP_BORDER_HEIGHT
-        clc
+        ldx #BORDER_HEIGHT
 BottomLoop
         dex
         sta WSYNC
@@ -149,6 +172,7 @@ PostLoop
 DrawScoreboardAndTop
         ldx #SCOREBOARD_HEIGHT
 .Timer
+        dey ; keep track of our lines
         dex
         sta WSYNC
         bne .Timer
@@ -161,8 +185,9 @@ DrawScoreboardAndTop
         sta PF1
         sta PF2
         
-        ldx #TOP_BORDER_HEIGHT
+        ldx #BORDER_HEIGHT
 .Timer2
+        dey ; keep track of our lines
         dex
         sta WSYNC
         bne .Timer2
@@ -205,40 +230,43 @@ DivideLoop
 
 ; This subroutine checks the player one joystick and moves the player accordingly
 CheckJoystick
+        ; First do any collision checks
+        bit CXP0FB ; Player 0/Playfield
+        bpl .NoCollision
+        ldx Player_X_Tmp
+        stx Player_X
+        ldx Player_Y_Tmp
+        stx Player_Y
+.NoCollision
         ldx Player_X
+        stx Player_X_Tmp ; Store so we can restore on collsion
         lda SWCHA
         and #$80 ; 1000000
-        beq .SkipMoveRight  ; checks bit 7 set
-        cpx #PLAYER_MIN_X ; Check bounds
-        beq .SkipMoveLeft
-        dex
-.SkipMoveRight
+        beq .TestRight  ; checks bit 7 set
+        dex 
+.TestRight
         lda SWCHA
         and #$40 ; 0100000
-        beq .SkipMoveLeft ; checks bit 6 set
-        cpx #PLAYER_MAX_X ; Check bounds
-        beq .SkipMoveLeft
+        beq .TestUp ; checks bit 6 set
         inx
-.SkipMoveLeft
-        stx Player_X
+.TestUp
+        stx Player_X        
         ; Now we repeat the process but with a SWCHA that is shifted left twice, so down is 
         ; bit 7 and up is bit 6
         ldx Player_Y
+        stx Player_Y_Tmp ; Store so we can restore on collsion
         lda SWCHA
         and #$20 ; 00100000
-        beq .SkipMoveDown  ; checks bit 5 set
-        cpx #PLAYER_MIN_Y ; Check bounds
-        beq .SkipMoveUp
-        dex
-.SkipMoveDown
+        beq .TestDown  ; checks bit 5 set
+        inx   
+.TestDown
         lda SWCHA
         and #$10 ; 00010000
-        beq .SkipMoveUp ; checks bit 4 set
-        cpx #PLAYER_MAX_Y ; Check bounds
-        beq .SkipMoveUp
-        inx
-.SkipMoveUp
+        beq .Done ; checks bit 4 set
+        dex
+.Done
         stx Player_Y
+        sta CXCLR ; clear collision checks
 
         rts
 
@@ -249,14 +277,13 @@ CheckJoystick
 PLAYER_SPRITE_DATA
         .byte #%00000000;--
         .byte #%00000000;--
-        .byte #%00010100;$84
-        .byte #%00111110;$84
-        .byte #%00000000;$F6
-        .byte #%00000000;$F6
-        .byte #%00001000;$F6
+        .byte #%11111111;$84
+        .byte #%11111111;$84
+        .byte #%11111111;$F6
+        .byte #%11111111;$F6
+        .byte #%11111111;$F6
+        .byte #%11111111;$20
         .byte #%00000000;$20
-        .byte #%00100010;$20
-        .byte #%00000000;--
 ;---End Graphics Data---
 
 
