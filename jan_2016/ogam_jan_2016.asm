@@ -5,8 +5,6 @@
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
 
 ;;;;; Todos!
-;;; use total line counter instead of piecemeil
-;;; use collision check instead of Y check for walls
 ;;; add "map" using playfield
 ;;; add "prize" on map
 ;;; can capture prize by touching prize
@@ -34,7 +32,9 @@ PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
 
 SCOREBOARD_HEIGHT equ #15
 BORDER_HEIGHT equ #8
-TOTAL_TOP_HEIGHT equ #23
+
+MAX_Y equ #167 ; Must be 192 - scoreboard - border - 2 (buffer, unclear why)
+MIN_Y equ #17  ; Must be border height + sprite height + 1 (buffer, unclear why)
 
 BORDER_COLOR equ #$51 ; last bit has to be 1 to do playfield reflection
 
@@ -97,15 +97,6 @@ PreLoop dex
 ; Loop until we hit the vertical position we want for the player. 
         ; This first part makes sure the sprite doesn't move past the boundary. Collision detection
         ; should be catching this but there's a line where it does not. This should be refactored.      
-        lda #191
-        sbc #TOTAL_TOP_HEIGHT
-        cmp Player_Y
-        beq SkipVLoop
-        bcc SkipVLoop ; Skip timing break below if Y is already below our top
-        lda #BORDER_HEIGHT
-        cmp Player_Y
-        beq SkipVLoop ; Skip timing break below if Y is already below our top
-
 VLoop   dey
         sta WSYNC
         cpy Player_Y
@@ -126,8 +117,6 @@ SpriteLoop
         bne SpriteLoop
        
         ; Loop until we are at BORDER_HEIGHT, meaning all scan lines processed except for the bottom
-        cpy #BORDER_HEIGHT
-        beq DrawBottomBorder
 VWait   dey
         cpy #BORDER_HEIGHT
         sta WSYNC
@@ -258,11 +247,17 @@ CheckJoystick
         lda SWCHA
         and #$20 ; 00100000
         beq .TestDown  ; checks bit 5 set
+        ; We need to do an explicit range check on Player_Y or the drawing kernel gets thrown off
+        ; and collisions with border don't trigger properly
+        cpx #MAX_Y
+        beq .Done
         inx   
 .TestDown
         lda SWCHA
         and #$10 ; 00010000
         beq .Done ; checks bit 4 set
+        cpx #MIN_Y
+        beq .Done
         dex
 .Done
         stx Player_Y
