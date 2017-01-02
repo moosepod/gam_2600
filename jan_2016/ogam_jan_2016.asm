@@ -3,6 +3,8 @@
         include "macro.h"
 
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
+;;;;; PlayerPal 2600 (http://www.alienbill.com/2600/playerpalnext.html and http://alienbill.com/2600/playfieldpal.html)
+;;;;; Making Games for the Atari 2600 by Steven Hugg
 
 ;;;;; Todos!
 ;;; add "map" using playfield
@@ -24,11 +26,19 @@ Player_Y                .byte ; Y position of player sprite.
 Player_X_Tmp            .byte 
 Player_Y_Tmp            .byte 
 
-PLAYER_START_X  equ #9
-PLAYER_START_Y  equ #150
+; For drawing playfield
+PF_tmpX                  .byte
+PF_tmpY                  .byte
+PF_tmpA                  .byte
+PF_wait_counter          .byte
+PF_frame_counter          .byte
+
+PLAYER_START_X  equ #4
+PLAYER_START_Y  equ #165
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
+PLAYFIELD_CHUNK_HEIGHT equ #8
 
 SCOREBOARD_HEIGHT equ #15
 BORDER_HEIGHT equ #8
@@ -76,8 +86,11 @@ NextFrame
         ; Check joysticks
         jsr CheckJoystick
         sta WSYNC ; this will commit to 1 scanline
-        lda #$00
+        lda #0
         sta COLUPF
+        lda #0
+        sta PF_wait_counter
+        sta PF_frame_counter
 
         jsr PositionPlayerX ; 2 scanlines
         ldx #33 
@@ -88,6 +101,7 @@ PreLoop dex
 ;;
 ;; 192 lines of frame total
 ;;
+Drawing
         ;; We will use y to track our current scanline. 
         ldy #192
         jsr DrawScoreboardAndTop
@@ -97,7 +111,8 @@ PreLoop dex
 ; Loop until we hit the vertical position we want for the player. 
         ; This first part makes sure the sprite doesn't move past the boundary. Collision detection
         ; should be catching this but there's a line where it does not. This should be refactored.      
-VLoop   dey
+VLoop   jsr DrawPlayfield
+        dey
         sta WSYNC
         cpy Player_Y
         bne VLoop
@@ -107,6 +122,7 @@ SkipVLoop
         ; Setup for sprite drawing
         ldx #PLAYER_SPRITE_HEIGHT  ; sprite data index
 SpriteLoop
+        jsr DrawPlayfield
         lda PLAYER_SPRITE_DATA,x
         sta GRP0
         lda PLAYER_COLOR_DATA,x
@@ -117,7 +133,8 @@ SpriteLoop
         bne SpriteLoop
        
         ; Loop until we are at BORDER_HEIGHT, meaning all scan lines processed except for the bottom
-VWait   dey
+VWait   jsr DrawPlayfield
+        dey
         cpy #BORDER_HEIGHT
         sta WSYNC
         bne VWait
@@ -157,6 +174,41 @@ PostLoop
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Subroutines
 ;;;
+
+DrawPlayfield
+        ; preserve/restore values
+        sta PF_tmpA
+        stx PF_tmpX
+        sty PF_tmpY
+
+        ; Draw new frame on 0
+        ldy PF_frame_counter
+        ldx PF_wait_counter
+        bne .StillWaiting
+.NewFrame
+        ; Set playfield
+        lda PFData0,y
+        sta PF0
+        lda PFData1,y
+        sta PF1
+        lda PFData2,y
+        sta PF2
+
+        ; Move to next increment and checkor wrap
+        ldx #PLAYFIELD_CHUNK_HEIGHT
+        iny
+        cpy #PLAYFIELD_CHUNK_HEIGHT
+        bne .PlayfieldDone
+        sty #0
+.StillWaiting
+        dex
+.PlayfieldDone
+        stx PF_wait_counter
+        sty PF_frame_counter
+        lda PF_tmpA
+        ldX PF_tmpX
+        ldy PF_tmpY
+        rts
 
 DrawScoreboardAndTop
         ldx #SCOREBOARD_HEIGHT
@@ -296,6 +348,40 @@ PLAYER_COLOR_DATA
         .byte #$0E;
 ;---End Color Data---
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PFData0
+        .byte #%10010000
+        .byte #%00010000
+        .byte #%10010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%10010000
+        .byte #%10010000
+        .byte #%00010000
+
+PFData1
+        .byte #%10001111
+        .byte #%00000000
+        .byte #%11110000
+        .byte #%00010011
+        .byte #%00010010
+        .byte #%10010010
+        .byte #%11110011
+        .byte #%00000000
+
+PFData2
+        .byte #%01001001
+        .byte #%01001000
+        .byte #%01001000
+        .byte #%01001111
+        .byte #%01000000
+        .byte #%01000000
+        .byte #%01110011
+        .byte #%00000000
+
+
+
+
 ; Epilogue
 
         org $fffc
