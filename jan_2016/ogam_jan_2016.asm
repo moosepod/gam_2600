@@ -7,7 +7,7 @@
 ;;;;; Making Games for the Atari 2600 by Steven Hugg
 
 ;;;;; Todos!
-;;; add "map" using playfield
+;;; fix "tearing"
 ;;; add "prize" on map
 ;;; can capture prize by touching prize
 ;;; show text on prize capture
@@ -33,15 +33,15 @@ PF_tmpA                  .byte
 PF_wait_counter          .byte
 PF_frame_counter          .byte
 
-PLAYER_START_X  equ #4
-PLAYER_START_Y  equ #165
+PLAYER_START_X  equ #7
+PLAYER_START_Y  equ #167
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
-PLAYFIELD_CHUNK_HEIGHT equ #8
+PLAYFIELD_BLOCK_HEIGHT equ #8
+PLAYFIELD_ROWS equ #17
 
 SCOREBOARD_HEIGHT equ #15
-BORDER_HEIGHT equ #8
 
 MAX_Y equ #167 ; Must be 192 - scoreboard - border - 2 (buffer, unclear why)
 MIN_Y equ #17  ; Must be border height + sprite height + 1 (buffer, unclear why)
@@ -91,6 +91,8 @@ NextFrame
         lda #0
         sta PF_wait_counter
         sta PF_frame_counter
+        lda #01
+        sta CTRLPF
 
         jsr PositionPlayerX ; 2 scanlines
         ldx #33 
@@ -105,8 +107,6 @@ Drawing
         ;; We will use y to track our current scanline. 
         ldy #192
         jsr DrawScoreboardAndTop
-        sta WSYNC
-        dey ; matches WSYNC, keeps track of line
 
 ; Loop until we hit the vertical position we want for the player. 
         ; This first part makes sure the sprite doesn't move past the boundary. Collision detection
@@ -135,24 +135,8 @@ SpriteLoop
         ; Loop until we are at BORDER_HEIGHT, meaning all scan lines processed except for the bottom
 VWait   jsr DrawPlayfield
         dey
-        cpy #BORDER_HEIGHT
         sta WSYNC
         bne VWait
-        
-        ;; Draw bottom line of playfield
-DrawBottomBorder
-        lda #BORDER_COLOR
-        sta CTRLPF
-        lda #$ff 
-        sta PF0
-        sta PF1
-        sta PF2
-
-        ldx #BORDER_HEIGHT
-BottomLoop
-        dex
-        sta WSYNC
-        bne BottomLoop
         
         lda #0
         sta PF0
@@ -181,8 +165,11 @@ DrawPlayfield
         stx PF_tmpX
         sty PF_tmpY
 
-        ; Draw new frame on 0
+        ; If we've run through all our frames, stop drawing
         ldy PF_frame_counter
+        cpy #PLAYFIELD_ROWS
+        beq .RestoreAndReturn
+
         ldx PF_wait_counter
         bne .StillWaiting
 .NewFrame
@@ -195,16 +182,15 @@ DrawPlayfield
         sta PF2
 
         ; Move to next increment and checkor wrap
-        ldx #PLAYFIELD_CHUNK_HEIGHT
+        ldx #PLAYFIELD_BLOCK_HEIGHT
         iny
-        cpy #PLAYFIELD_CHUNK_HEIGHT
-        bne .PlayfieldDone
-        sty #0
+        jmp .PlayfieldDone
 .StillWaiting
         dex
 .PlayfieldDone
         stx PF_wait_counter
         sty PF_frame_counter
+.RestoreAndReturn
         lda PF_tmpA
         ldX PF_tmpX
         ldy PF_tmpY
@@ -226,19 +212,6 @@ DrawScoreboardAndTop
         sta PF1
         sta PF2
         
-        ldx #BORDER_HEIGHT
-.Timer2
-        dey ; keep track of our lines
-        dex
-        sta WSYNC
-        bne .Timer2
-        
-        ;; draw first line (playfield only) then reset playfield
-        lda #$10 
-        sta PF0
-        lda #0
-        sta PF1
-        sta PF2
         
         rts
 
@@ -322,62 +295,98 @@ CheckJoystick
 ;---Graphics Data from PlayerPal 2600---
 
 PLAYER_SPRITE_DATA
-        .byte #%00000000;--
-        .byte #%00000000;--
-        .byte #%11111111;$84
-        .byte #%11111111;$84
-        .byte #%11111111;$F6
-        .byte #%11111111;$F6
-        .byte #%11111111;$F6
-        .byte #%11111111;$20
-        .byte #%00000000;$20
+        .byte #%00000000;$30m
+        .byte #%00000000;$30m
+        .byte #%00110000;$30
+        .byte #%00000000;$30
+        .byte #%00000000;$30
+        .byte #%00110000;$30
+        .byte #%00110000;$30
+        .byte #%00110000;$30
+        .byte #%00110000;$30
+        .byte #%00110000;$30
+        .byte #%00000000;$30m
 ;---End Graphics Data---
 
 
 ;---Color Data from PlayerPal 2600---
 
 PLAYER_COLOR_DATA
-        .byte #$54;
-        .byte #$84;
-        .byte #$06;
-        .byte #$06;
-        .byte #$06;
-        .byte #$FE;
-        .byte #$FE;
-        .byte #$0E;
-        .byte #$0E;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
+        .byte #$1A;
 ;---End Color Data---
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PFData0
+        .byte #%11110000
         .byte #%10010000
+        .byte #%01010000
+        .byte #%01010000
+        .byte #%01010000
+        .byte #%01010000
+        .byte #%11010000
         .byte #%00010000
-        .byte #%10010000
         .byte #%00010000
+        .byte #%11010000
+        .byte #%01010000
+        .byte #%01010000
         .byte #%00010000
-        .byte #%10010000
-        .byte #%10010000
-        .byte #%00010000
+        .byte #%01010000
+        .byte #%01010000
+        .byte #%11110000
+        .byte #%00000000
 
 PFData1
-        .byte #%10001111
-        .byte #%00000000
-        .byte #%11110000
-        .byte #%00010011
-        .byte #%00010010
-        .byte #%10010010
-        .byte #%11110011
+        .byte #%11111111
+        .byte #%10100000
+        .byte #%10101111
+        .byte #%00101000
+        .byte #%10111111
+        .byte #%10000000
+        .byte #%10111111
+        .byte #%00100001
+        .byte #%00101111
+        .byte #%10101000
+        .byte #%10101011
+        .byte #%10101000
+        .byte #%10101010
+        .byte #%11101000
+        .byte #%00001010
+        .byte #%11111111
         .byte #%00000000
 
 PFData2
-        .byte #%01001001
-        .byte #%01001000
-        .byte #%01001000
-        .byte #%01001111
-        .byte #%01000000
-        .byte #%01000000
-        .byte #%01110011
+        .byte #%11111111
         .byte #%00000000
+        .byte #%11111100
+        .byte #%00000000
+        .byte #%01111111
+        .byte #%01000000
+        .byte #%01111110
+        .byte #%01000010
+        .byte #%01111010
+        .byte #%00000000
+        .byte #%11101111
+        .byte #%00100001
+        .byte #%01111011
+        .byte #%00100001
+        .byte #%10001011
+        .byte #%11111111
+        .byte #%00000000
+
+
+
+
+
 
 
 
