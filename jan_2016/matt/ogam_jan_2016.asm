@@ -7,11 +7,13 @@
 ;;;;; Making Games for the Atari 2600 by Steven Hugg
 
 ;;;;; Todos!
-;;; fix "tearing"
-;;; add "prize" on map
-;;; can capture prize by touching prize
-;;; show text on prize capture
-;;; multiple maps 
+;;; CONCEPT: MooseMaze
+;;; Navigate through a series of mazes of increasing difficulty.
+;;; Lines start thick, end thin
+;;; character is 8x8 (?)
+;;; use second character for target (your buddy moose?)
+;;; loading screen
+;;; Level and timer scoreboard
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
 
