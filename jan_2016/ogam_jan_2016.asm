@@ -27,10 +27,6 @@ Player_X_Tmp            .byte
 Player_Y_Tmp            .byte 
 
 ; For drawing playfield
-PF_tmpX                  .byte
-PF_tmpY                  .byte
-PF_tmpA                  .byte
-PF_wait_counter          .byte
 PF_frame_counter          .byte
 
 PLAYER_START_X  equ #7
@@ -87,7 +83,6 @@ NextFrame
         lda #0
         sta COLUPF
         lda #0
-        sta PF_wait_counter
         sta PF_frame_counter
         lda #01
         sta CTRLPF
@@ -103,103 +98,54 @@ PreLoop dex
 ;;
 Drawing
         ;; We will use y to track our current scanline. 
+        ldy #0
+        sty PF_frame_counter
+   
         ldy #192
-        ; Draw  
+
+        ; Setup header  
         lda #BORDER_COLOR 
         sta COLUPF
-        lda #$00 
+        lda #$00
         sta PF0
         sta PF1
         sta PF2
 
-; Loop until we hit the vertical position we want for the player. 
-        ; This first part makes sure the sprite doesn't move past the boundary. Collision detection
-        ; should be catching this but there's a line where it does not. This should be refactored.      
-VLoop   jsr DrawPlayfield
-        dey
+ScanLoop
+       ; we expand our playfield data vertically into units 8 tall. Rather than
+        ; test for mod 8 directly, we compare with a precalculated list of indexes
+        ; current problem! running out of lines
         sta WSYNC
-        cpy Player_Y
-        bne VLoop
-
-; Draw the player sprite
-SkipVLoop
-        ; Setup for sprite drawing
-        ldx #PLAYER_SPRITE_HEIGHT  ; sprite data index
-SpriteLoop
-        jsr DrawPlayfield
-        lda PLAYER_SPRITE_DATA,x
-        sta GRP0
-        lda PLAYER_COLOR_DATA,x
-        sta COLUP0
-        sta WSYNC
-        dey ; track scanlines
-        dex
-        bne SpriteLoop
-       
-        ; Loop until we are at BORDER_HEIGHT, meaning all scan lines processed except for the bottom
-VWait   jsr DrawPlayfield
-        dey
-        sta WSYNC
-        bne VWait
-        
-        lda #0
+        ldx PF_frame_counter
+        tya 
+        cmp PlayfieldIndexes,x 
+        bne SkipPlayfieldChange
+        inx ; move to next counter
+        stx PF_frame_counter
+        lda PFData0,x
         sta PF0
+        lda PFData1,x
         sta PF1
+        lda PFData2,x
         sta PF2
-     
+
+SkipPlayfieldChange
+        dey
+        cpy #0
+        bne ScanLoop
+
 ; 30 lines of overscan
         ldx #30
         clc
-PostLoop 
+PostLoop
         dex
-        sta WSYNC
         bne PostLoop
 
-; go to next frame
-        nop
         jmp NextFrame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Subroutines
 ;;;
-
-DrawPlayfield
-        ; preserve/restore values
-        sta PF_tmpA
-        stx PF_tmpX
-        sty PF_tmpY
-
-        ; If we've run through all our frames, stop drawing
-        ldy PF_frame_counter
-        cpy #PLAYFIELD_ROWS
-        beq .RestoreAndReturn
-
-        ldx PF_wait_counter
-        bne .StillWaiting
-.NewFrame
-        ; Set playfield
-        lda PFData0,y
-        sta PF0
-        lda PFData1,y
-        sta PF1
-        lda PFData2,y
-        sta PF2
-
-        ; Move to next increment and checkor wrap
-        ldx #PLAYFIELD_BLOCK_HEIGHT
-        iny
-        jmp .PlayfieldDone
-.StillWaiting
-        dex
-.PlayfieldDone
-        stx PF_wait_counter
-        sty PF_frame_counter
-.RestoreAndReturn
-        lda PF_tmpA
-        ldX PF_tmpX
-        ldy PF_tmpY
-        rts
-
 
 ; Handle the (very timing dependent) adjustment of X position for the player
 PositionPlayerX
@@ -310,78 +256,118 @@ PLAYER_COLOR_DATA
         .byte #$1A;
 ;---End Color Data---
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; List of indexes we draw the playfield at
+PlayfieldIndexes
+        .byte #192
+        .byte #184
+        .byte #176
+        .byte #168
+        .byte #160
+        .byte #152
+        .byte #144
+        .byte #136
+        .byte #128
+        .byte #120
+        .byte #112
+        .byte #104
+        .byte #96
+        .byte #88
+        .byte #80
+        .byte #72
+        .byte #64
+        .byte #56
+        .byte #48
+        .byte #40
+        .byte #32
+        .byte #24
+        .byte #16
+        .byte #8
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PFData0
         .byte #%00000000
         .byte #%00000000
+        .byte #%00000000
         .byte #%11110000
-        .byte #%10010000
-        .byte #%01010000
-        .byte #%01010000
-        .byte #%01010000
-        .byte #%01010000
-        .byte #%11010000
         .byte #%00010000
         .byte #%00010000
-        .byte #%11010000
-        .byte #%01010000
-        .byte #%01010000
         .byte #%00010000
-        .byte #%01010000
-        .byte #%01010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
         .byte #%11110000
-        .byte #%00000000
-        .byte #%00000000
-        .byte #%00000000
-        .byte #%00000000
-PFData1
-        .byte #%00000000
-        .byte #%00000000
-        .byte #%11111111
-        .byte #%10100000
-        .byte #%10101111
-        .byte #%00101000
-        .byte #%10111111
-        .byte #%10000000
-        .byte #%10111111
-        .byte #%00100001
-        .byte #%00101111
-        .byte #%10101000
-        .byte #%10101011
-        .byte #%10101000
-        .byte #%10101010
-        .byte #%11101000
-        .byte #%00001010
-        .byte #%11111111
         .byte #%00000000
         .byte #%00000000
         .byte #%00000000
         .byte #%00000000
 
+PFData1
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%11111111
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%11111111
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
 PFData2
         .byte #%00000000
         .byte #%00000000
-        .byte #%11111111
         .byte #%00000000
-        .byte #%11111100
-        .byte #%00000000
-        .byte #%01111111
-        .byte #%01000000
-        .byte #%01111110
-        .byte #%01000010
-        .byte #%01111010
-        .byte #%00000000
-        .byte #%11101111
-        .byte #%00100001
-        .byte #%01111011
-        .byte #%00100001
-        .byte #%10001011
         .byte #%11111111
         .byte #%00000000
         .byte #%00000000
         .byte #%00000000
         .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%11111111
+        .byte #%00000000
+
+
 
 
 
