@@ -8,12 +8,7 @@
 
 ;;;;; Todos!
 ;;; CONCEPT: MooseMaze
-;;; Navigate through a series of mazes of increasing difficulty.
-;;; Lines start thick, end thin
-;;; character is 8x8 (?)
-;;; use second character for target (your buddy moose?)
-;;; loading screen
-;;; Level and timer scoreboard
+;;; Switch to two-line kernel?
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
 
@@ -39,7 +34,7 @@ PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
 PLAYFIELD_BLOCK_HEIGHT equ #8
 PLAYFIELD_ROWS equ #22
 
-MAX_Y equ #176
+MAX_Y equ #173
 MIN_Y equ #16
 
 BORDER_COLOR equ #$51 ; last bit has to be 1 to do playfield reflection
@@ -60,10 +55,8 @@ Start
 Initialize
         lda #PLAYER_START_X
         sta Player_X
-        sta Player_X_Tmp
         lda #PLAYER_START_Y
         sta Player_Y
-        sta Player_Y_Tmp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Kernel        
@@ -441,10 +434,11 @@ PFData0
         .byte #%00010000
         .byte #%00010000
         .byte #%00010000
-        .byte #%11110000
-        .byte #%11110000
-        .byte #%11110000
-        .byte #%11110000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
+        .byte #%00010000
         .byte #%00010000
         .byte #%00010000
         .byte #%00010000
@@ -646,7 +640,8 @@ PFData1
         .byte #%11111111
         .byte #%11111111
         .byte #%11111111
-        .byte #%11111111
+        .byte #%00000000
+        .byte #%00000000
         .byte #%00000000
         .byte #%00000000
         .byte #%00000000
@@ -834,11 +829,12 @@ PFData2
         .byte #%00000000
         .byte #%00000000
         .byte #%00000000
-        .byte #%11111111
-        .byte #%11111111
-        .byte #%11111111
-        .byte #%11111111
         .byte #%00000000
+        .byte #%00000000
+        .byte #%00000000
+        .byte #%11111111
+        .byte #%11111111
+        .byte #%11111111
         .byte #%00000000
         .byte #%00000000
         .byte #%00000000
