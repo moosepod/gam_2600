@@ -132,9 +132,9 @@ SkipPlayfieldChange
 
 ; 30 lines of overscan
         ldx #30
-        clc
 PostLoop
         dex
+        sta WSYNC
         bne PostLoop
 
         jmp NextFrame
