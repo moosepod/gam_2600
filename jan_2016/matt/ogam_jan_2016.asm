@@ -39,8 +39,8 @@ PLAYER_SPRITE_HEIGHT equ #8 ; this is really 1 less than the sprite height
 PLAYFIELD_BLOCK_HEIGHT equ #8
 PLAYFIELD_ROWS equ #22
 
-MAX_Y equ #167 ; Must be 192 - scoreboard - border - 2 (buffer, unclear why)
-MIN_Y equ #17  ; Must be border height + sprite height + 1 (buffer, unclear why)
+MAX_Y equ #176
+MIN_Y equ #16
 
 BORDER_COLOR equ #$51 ; last bit has to be 1 to do playfield reflection
 
@@ -117,17 +117,44 @@ ScanLoop
        ; we expand our playfield data vertically into units 8 tall. Rather than
         ; test for mod 8 directly, we compare with a precalculated list of indexes
         ; current problem! running out of lines
-        sta WSYNC
+        ; draw player at ypos
+        cpy Player_Y
+        bne DrawBackgroundOnly
+        ldx #PLAYER_SPRITE_HEIGHT 
+
+DrawPlayerAndBackground
+        ; Draw the background
         lda PFData0,y
         sta PF0
         lda PFData1,y
         sta PF1
         lda PFData2,y
         sta PF2
-
-SkipPlayfieldChange
+        ; Draw the current line of the sprite
+        lda PLAYER_SPRITE_DATA,x
+        sta GRP0
+        lda PLAYER_COLOR_DATA,x
+        sta COLUP0
+        ; Decrement both line counter (y) and sprite counter (x)
         dey
-        cpy #0
+        dex
+        ; Wait for next line, then either repeat sprite loop or continue on
+        sta WSYNC
+        bne DrawPlayerAndBackground
+        jmp ScanLoop ; continue rest of loop
+        
+DrawBackgroundOnly
+        ; Wait for next scanline
+        sta WSYNC
+        ; Draw background
+        lda PFData0,y
+        sta PF0
+        lda PFData1,y
+        sta PF1
+        lda PFData2,y
+        sta PF2
+        ; Decrement line counter and jump to start of loop if we have remaining lines
+        dey
         bne ScanLoop
 
 ; 30 lines of overscan
