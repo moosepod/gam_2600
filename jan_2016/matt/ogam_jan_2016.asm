@@ -83,20 +83,17 @@ NextFrame
         sta CTRLPF
 
         jsr PositionPlayerX ; 2 scanlines
-        ldx #33 
+        ldx #32 
 PreLoop dex
         sta WSYNC
         bne PreLoop
         
-;;
-;; 192 lines of frame total
-;;
-Drawing
+SetupDrawing
         ;; We will use y to track our current scanline. 
         ldy #0
         sty PF_frame_counter
    
-        ldy #192
+        ldy #192 ; one manual wsync 
 
         ; Setup header  
         lda #BORDER_COLOR 
@@ -105,9 +102,14 @@ Drawing
         sta PF0
         sta PF1
         sta PF2
+        sta WSYNC
+
+;;
+;; 192 lines of frame total
+;;
 
 ScanLoop
-       ; we expand our playfield data vertically into units 8 tall. Rather than
+        ; we expand our playfield data vertically into units 8 tall. Rather than
         ; test for mod 8 directly, we compare with a precalculated list of indexes
         ; current problem! running out of lines
         ; draw player at ypos
@@ -123,12 +125,17 @@ DrawPlayerAndBackground
         sta PF1
         lda PFData2,y
         sta PF2
+        ; end first line of kernel
+        dey
+        sta WSYNC 
+
         ; Draw the current line of the sprite
         lda PLAYER_SPRITE_DATA,x
         sta GRP0
         lda PLAYER_COLOR_DATA,x
         sta COLUP0
-        ; Decrement both line counter (y) and sprite counter (x)
+
+        ; Decrement both line counter (y) and sprite counter (x) for second line
         dey
         dex
         ; Wait for next line, then either repeat sprite loop or continue on
@@ -137,8 +144,6 @@ DrawPlayerAndBackground
         jmp ScanLoop ; continue rest of loop
         
 DrawBackgroundOnly
-        ; Wait for next scanline
-        sta WSYNC
         ; Draw background
         lda PFData0,y
         sta PF0
@@ -146,8 +151,12 @@ DrawBackgroundOnly
         sta PF1
         lda PFData2,y
         sta PF2
-        ; Decrement line counter and jump to start of loop if we have remaining lines
+        ; Wait for next scanline and decrement, twice
+        sta WSYNC
         dey
+        sta WSYNC
+        dey
+        ; jump to start of loop if we have remaining lines
         bne ScanLoop
 
 ; 30 lines of overscan
@@ -225,6 +234,7 @@ CheckJoystick
         cpx #MAX_Y
         beq .Done
         inx   
+        inx ; we move in units of 2 Y positions to match kernel
 .TestDown
         lda SWCHA
         and #$10 ; 00010000
@@ -232,6 +242,7 @@ CheckJoystick
         cpx #MIN_Y
         beq .Done
         dex
+        dex ; we move in units of 2 Y positions to match kernel
 .Done
         stx Player_Y
         sta CXCLR ; clear collision checks
