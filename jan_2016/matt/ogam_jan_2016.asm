@@ -31,16 +31,18 @@ Player_Y                .byte ; Y position of player sprite.
 Player_X_Tmp            .byte 
 Player_Y_Tmp            .byte 
 
+; For use with subroutines
+Spritedraw_Sprite_Number .byte
+Spritedraw_Sprite_YPos .byte
+
 ; For drawing playfield
 PF_frame_counter          .byte
 
-SPRITE_HEIGHT equ #16 ; height in lines of sprites
-
 PLAYER_START_X  equ #8
-PLAYER_START_Y  equ #164
+PLAYER_START_Y  equ #165 ; needs to be odd
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
-PLAYER_SPRITE_HEIGHT equ #9 ; this is really 1 greater than sprite height, there's a buffer empty line that clears the sprite
+PLAYER_SPRITE_HEIGHT equ #18 ; this is really 2ma greater than sprite height, there's a buffer empty line that clears the sprite
 PLAYFIELD_BLOCK_HEIGHT equ #8
 PLAYFIELD_ROWS equ #22
 
@@ -52,6 +54,7 @@ MAX_Y equ #173
 MIN_Y equ #16
 
 BORDER_COLOR equ #$EF ; last bit has to be 1 to do playfield reflection
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -96,6 +99,10 @@ NextFrame
         lda #01
         sta CTRLPF
 
+        ; Clear sprite color and sprite
+        lda #00
+        sta GRP0
+
         jsr PositionPlayerX ; 2 scanlines
         ldx #32 
 PreLoop dex
@@ -120,6 +127,7 @@ SetupDrawing
         ; Start background color for scoreboard
         lda #SCOREBOARD_BACKGROUND_COLOR
         sta COLUBK
+
 
         ; Complete last line of underscan
         sta WSYNC
@@ -148,12 +156,10 @@ ScanLoop
 
         ; Draw player sprite
         lda #0 ; sprite 0, player
-        pha
-        lda #Player_Y
-        pha
-        ;jsr DrawSprite
-        pla
-        pla
+        sta Spritedraw_Sprite_Number
+        lda Player_Y
+        sta Spritedraw_Sprite_YPos
+        jsr DrawSprite
 
         ; If we've reached bottom of scoreboard, activate playfield background
         cpy #SCOREBOARD_HEIGHT
@@ -192,14 +198,17 @@ DrawSprite
     ;; due to the two-line kernel. 
     ;; (!) This routine will blow out the X and A registers
 
-    ;; first item on stack is sprite number. 0 is player, 1 is wall
-    ;; second item on stack is Y position of sprite
+    ;; set Spritedraw_Sprite_Number and Spritedraw_Sprite_YPos before claling
 
-    pla ; pull down Y positions of sprite
+    lda Spritedraw_Sprite_YPos
     sty Temp  ; store our current line count into a temp variable, then subtract it from sprite positoin
     sbc Temp  
     bmi .Return ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
     tax ; move the accumulator to our X index (it'll contain the index of the sprite line we want)
+    
+    ; Jump to end if we are past the end of the sprite
+    cpx #PLAYER_SPRITE_HEIGHT
+    bcs .Return
 
     ; Draw the current line of the sprite
     lda PLAYER_SPRITE_DATA,x
@@ -208,7 +217,6 @@ DrawSprite
     sta COLUP0
 
 .Return
-    pla ; remove sprite number from stack
     rts
 
 ; Handle the (very timing dependent) adjustment of X position for the player
@@ -292,33 +300,55 @@ CheckJoystick
 ; Sprite data
 ;---Graphics Data from PlayerPal 2600---
 
+; data lines are all doubled up to account for our two-line kernel. 
 PLAYER_SPRITE_DATA
+        .byte #%00011000;$0C
+        .byte #%00011000;$0C
+        .byte #%00011100;$0C
+        .byte #%00011100;$0C
+        .byte #%00011110;$0C
+        .byte #%00011110;$0C
+        .byte #%00010000;$0C
+        .byte #%00010000;$0C
+        .byte #%00010000;$0C
+        .byte #%00010000;$0C
+        .byte #%01111110;$F4
+        .byte #%01111110;$F4
+        .byte #%01111110;$F4
+        .byte #%01111110;$F4
+        .byte #%00111100;$F4
+        .byte #%00111100;$F4
         .byte #%00000000 ; blank line to offset sprite (we never reach 0)
         .byte #%00000000 ; buffer line that clears sprite on last line
-        .byte #%00111100;$F4
-        .byte #%01111110;$F4
-        .byte #%01111110;$F4
-        .byte #%00010000;$0C
-        .byte #%00010000;$0C
-        .byte #%00011110;$0C
-        .byte #%00011100;$0C
-        .byte #%00011000;$0C
+        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
+        .byte #%00000000 ; buffer line that clears sprite on last line
 ;---End Graphics Data---
 
 
 ;---Color Data from PlayerPal 2600---
 
+; color lines are doubled up to account for our two line kernel.
 PLAYER_COLOR_DATA
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
         .byte #$0C;
         .byte #$0C;
         .byte #$0C;
         .byte #$0C;
         .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
 ;---End Color Data---
 
 
