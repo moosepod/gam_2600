@@ -34,6 +34,8 @@ Player_Y_Tmp            .byte
 ; For drawing playfield
 PF_frame_counter          .byte
 
+SPRITE_HEIGHT equ #16 ; height in lines of sprites
+
 PLAYER_START_X  equ #8
 PLAYER_START_Y  equ #164
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
@@ -42,7 +44,7 @@ PLAYER_SPRITE_HEIGHT equ #9 ; this is really 1 greater than sprite height, there
 PLAYFIELD_BLOCK_HEIGHT equ #8
 PLAYFIELD_ROWS equ #22
 
-SCOREBOARD_HEIGHT equ #179 ; must be odd
+SCOREBOARD_HEIGHT equ #177 ; must be odd since compare is on odd lines
 SCOREBOARD_BACKGROUND_COLOR equ #$00
 PLAYFIELD_BACKGROUND_COLOR equ #$9E
 
@@ -123,45 +125,15 @@ SetupDrawing
         sta WSYNC
 
 ;;
-;; 192 lines of frame total
+;; 192 lines of frame total     
 ;;
+
+
 
 ScanLoop
         ; we expand our playfield data vertically into units 8 tall. Rather than
         ; test for mod 8 directly, we compare with a precalculated list of indexes
-        ; current problem! running out of lines
-        ; draw player at ypos
-        cpy Player_Y
-        bne DrawBackgroundOnly
-        ldx #PLAYER_SPRITE_HEIGHT 
 
-DrawPlayerAndBackground
-        ; Draw the background
-        lda PFData0,y
-        sta PF0
-        lda PFData1,y
-        sta PF1
-        lda PFData2,y
-        sta PF2
-        ; end first line of kernel
-        dey
-        sta WSYNC 
-
-        ; Draw the current line of the sprite
-        lda PLAYER_SPRITE_DATA,x
-        sta GRP0
-        lda PLAYER_COLOR_DATA,x
-        sta COLUP0
-
-        ; Decrement both line counter (y) and sprite counter (x) for second line
-        dey
-        dex
-        ; Wait for next line, then either repeat sprite loop or continue on
-        sta WSYNC
-        bne DrawPlayerAndBackground
-        jmp ScanLoop ; continue rest of loop
-        
-DrawBackgroundOnly
         ; Draw background
         lda PFData0,y
         sta PF0
@@ -169,9 +141,20 @@ DrawBackgroundOnly
         sta PF1
         lda PFData2,y
         sta PF2
-        ; Wait for next scanline and decrement, twice
+
+        ; Wait for next scanline and decrement
         sta WSYNC
         dey
+
+        ; Draw player sprite
+        lda #0 ; sprite 0, player
+        pha
+        lda #Player_Y
+        pha
+        ;jsr DrawSprite
+        pla
+        pla
+
         ; If we've reached bottom of scoreboard, activate playfield background
         cpy #SCOREBOARD_HEIGHT
         bne ScanLoopEnd
@@ -203,6 +186,30 @@ PostLoop
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Subroutines
 ;;;
+
+DrawSprite
+    ;; Draw a given sprite. Note we assume all sprites are SPRITE_HEIGHT units high. This is double the rows of data
+    ;; due to the two-line kernel. 
+    ;; (!) This routine will blow out the X and A registers
+
+    ;; first item on stack is sprite number. 0 is player, 1 is wall
+    ;; second item on stack is Y position of sprite
+
+    pla ; pull down Y positions of sprite
+    sty Temp  ; store our current line count into a temp variable, then subtract it from sprite positoin
+    sbc Temp  
+    bmi .Return ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
+    tax ; move the accumulator to our X index (it'll contain the index of the sprite line we want)
+
+    ; Draw the current line of the sprite
+    lda PLAYER_SPRITE_DATA,x
+    sta GRP0
+    lda PLAYER_COLOR_DATA,x
+    sta COLUP0
+
+.Return
+    pla ; remove sprite number from stack
+    rts
 
 ; Handle the (very timing dependent) adjustment of X position for the player
 PositionPlayerX
@@ -488,7 +495,6 @@ PFData0
  .byte #%00110000
  .byte #%00110000
  .byte #%00110000
- .byte #%00110000
  .byte #%11110000
  .byte #%11110000
  .byte #%11110000
@@ -499,6 +505,8 @@ PFData0
  .byte #%11110000
  .byte #%11110000
  .byte #%11110000
+ .byte #%00000000
+ .byte #%00000000
  .byte #%00000000
  .byte #%00000000
  .byte #%00000000
@@ -705,6 +713,8 @@ PFData1
  .byte #%00000000
  .byte #%00000000
  .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
 
 PFData2
  .byte #%11111111
@@ -887,6 +897,8 @@ PFData2
  .byte #%11111111
  .byte #%11111111
  .byte #%11111111
+ .byte #%00000000
+ .byte #%00000000
  .byte #%00000000
  .byte #%00000000
  .byte #%00000000
