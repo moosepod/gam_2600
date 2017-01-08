@@ -210,7 +210,7 @@ PlayerDone
         lda #BORDER_COLOR
         sta COLUP1
         jmp CheckScoreboard
-        
+
 WallDone
         lda #$00
         sta GRP1 ; clear wall sprite
@@ -291,13 +291,14 @@ DivideLoop
 
 ; This subroutine checks the player one joystick and moves the player accordingly
 CheckJoystick
-        ; First do any collision checks
+        ; First do any collision checks. Check player 0 with playfield (bit 1)
         bit CXP0FB ; Player 0/Playfield
-        bpl .NoCollision
-        ldx Player_X_Tmp
-        stx Player_X
-        ldx Player_Y_Tmp
-        stx Player_Y
+        bpl .CheckWallCollision
+        jmp .ResetPlayerPos
+.CheckWallCollision
+        bit CXPPMM ; Player 0/Player 1
+        bmi .ResetPlayerPos
+        jmp .NoCollision
 .NoCollision
         ldx Player_X
         stx Player_X_Tmp ; Store so we can restore on collsion
@@ -333,6 +334,12 @@ CheckJoystick
         beq .Done
         dex
         dex ; we move in units of 2 Y positions to match kernel
+        jmp .Done
+.ResetPlayerPos
+        ldx Player_X_Tmp
+        stx Player_X
+        ldx Player_Y_Tmp
+        stx Player_Y
 .Done
         stx Player_Y
         sta CXCLR ; clear collision checks
