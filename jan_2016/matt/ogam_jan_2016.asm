@@ -110,8 +110,11 @@ NextFrame
 ;;
 ;; 37 lines of underscan total
 ;;
-        ; Check joysticks
+        ; Check joysticks. This will use 2 scanlines in total
+        sta WSYNC ; Give our joystick check a full scanline
         jsr CheckJoystick
+
+        ; More Initialization past a fresh scanline
         sta WSYNC ; this will commit to 1 scanline
         lda #0
         sta COLUPF
@@ -125,7 +128,7 @@ NextFrame
         sta GRP0
 
         jsr PositionPlayerX ; 2 scanlines
-        ldx #32 
+        ldx #30
 PreLoop dex
         sta WSYNC
         bne PreLoop
@@ -304,6 +307,7 @@ CheckJoystick
         stx Player_X_Tmp ; Store so we can restore on collsion
         lda SWCHA
         and #$80 ; 1000000
+        sta WSYNC ; make time for rest of logic
         beq .TestRight  ; checks bit 7 set
         dex 
 .TestRight
@@ -336,6 +340,7 @@ CheckJoystick
         dex ; we move in units of 2 Y positions to match kernel
         jmp .Done
 .ResetPlayerPos
+        sta WSYNC ; mirror WSYNC with non-collsion logic
         ldx Player_X_Tmp
         stx Player_X
         ldx Player_Y_Tmp
