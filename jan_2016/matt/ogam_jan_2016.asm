@@ -7,6 +7,7 @@
 ;;;;; Making Games for the Atari 2600 by Steven Hugg
 
 ;;;;; Todos!
+;;;;; Change line count to a variable instead of y? use y for temp indexing.
 ;;; CONCEPT: MooseMaze
 ;;; TODOS:
 ;;; Color cycle 
@@ -32,7 +33,7 @@ Player_X_Tmp            .byte
 Player_Y_Tmp            .byte 
 
 ; For use with subroutines
-Spritedraw_Sprite_Number .byte
+Spritedraw_Sprite_Ptr .word
 Spritedraw_Sprite_YPos .byte
 
 ; For drawing playfield
@@ -150,15 +151,19 @@ ScanLoop
         lda PFData2,y
         sta PF2
 
+        ; Setup for sprite drawing 
+        lda #<Player_Sprite_Data ; sprite 0, player
+        sta Spritedraw_Sprite_Ptr
+        lda #>Player_Sprite_Data
+        sta Spritedraw_Sprite_Ptr+1
+        lda Player_Y
+        sta Spritedraw_Sprite_YPos
+
         ; Wait for next scanline and decrement
         sta WSYNC
         dey
 
         ; Draw player sprite
-        lda #0 ; sprite 0, player
-        sta Spritedraw_Sprite_Number
-        lda Player_Y
-        sta Spritedraw_Sprite_YPos
         jsr DrawSprite
 
         ; If we've reached bottom of scoreboard, activate playfield background
@@ -198,25 +203,26 @@ DrawSprite
     ;; due to the two-line kernel. 
     ;; (!) This routine will blow out the X and A registers
 
-    ;; set Spritedraw_Sprite_Number and Spritedraw_Sprite_YPos before claling
+    ;; set Spritedraw_Sprite_Ptr and Spritedraw_Sprite_YPos before calling
 
     lda Spritedraw_Sprite_YPos
-    sty Temp  ; store our current line count into a temp variable, then subtract it from sprite positoin
+    sty Temp  ; store our current line count into a temp variable, then subtract it from sprite position
     sbc Temp  
     bmi .Return ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
-    tax ; move the accumulator to our X index (it'll contain the index of the sprite line we want)
     
     ; Jump to end if we are past the end of the sprite
-    cpx #PLAYER_SPRITE_HEIGHT
+    tay
+    cpy #PLAYER_SPRITE_HEIGHT
     bcs .Return
 
+    ; indirect mode only works with y?
     ; Draw the current line of the sprite
-    lda PLAYER_SPRITE_DATA,x
+    lda (Spritedraw_Sprite_Ptr),y
     sta GRP0
-    lda PLAYER_COLOR_DATA,x
+    lda PLAYER_COLOR_DATA,y
     sta COLUP0
-
 .Return
+    ldy Temp
     rts
 
 ; Handle the (very timing dependent) adjustment of X position for the player
@@ -301,7 +307,8 @@ CheckJoystick
 ;---Graphics Data from PlayerPal 2600---
 
 ; data lines are all doubled up to account for our two-line kernel. 
-PLAYER_SPRITE_DATA
+    align $100; make sure data doesn't cross page boundary
+Player_Sprite_Data
         .byte #%00011000;$0C
         .byte #%00011000;$0C
         .byte #%00011100;$0C
@@ -323,7 +330,6 @@ PLAYER_SPRITE_DATA
         .byte #%00000000 ; blank line to offset sprite (we never reach 0)
         .byte #%00000000 ; buffer line that clears sprite on last line
 ;---End Graphics Data---
-
 
 ;---Color Data from PlayerPal 2600---
 
