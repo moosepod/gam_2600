@@ -174,10 +174,6 @@ ScanLoop
         lda PFData2,y
         sta PF2
 
-        ; Setup for sprite drawing 
-        lda #170
-        sta Wall_Y
-
         ; Wait for next scanline and decrement
         sta WSYNC
         dey
@@ -201,20 +197,16 @@ ScanLoop
 
         ; Draw wall sprite
 PlayerDone
-        lda Wall_Y
-        sty Temp  ; store our current line count into a temp variable, then subtract it from sprite position
-        sbc Temp  
-        bmi WallDone ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
-        tax
-        cpx #WALL_SPRITE_HEIGHT
-        bcs WallDone
+        ; if the byte in our wall data for this row is positive, draw the wall sprite
+        lda WallData,y
+        cmp #0
+        beq NoWall
         lda #$FF ; wall is just a straight line
         sta GRP1
         lda #BORDER_COLOR
         sta COLUP1
         jmp CheckScoreboard
-
-WallDone
+NoWall
         lda #$00
         sta GRP1 ; clear wall sprite
         ; If we've reached bottom of scoreboard, activate playfield background
@@ -404,51 +396,6 @@ PLAYER_COLOR_DATA
         .byte #$F4;
         .byte #$F4;
         .byte #$F4;
-;---End Color Data---
-
-Wall_Sprite_Data
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$0C
-        .byte #%11111111;$F4
-        .byte #%11111111;$F4
-        .byte #%11111111;$F4
-        .byte #%11111111;$F4
-        .byte #%11111111;$F4
-        .byte #%11111111;$F4
-        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
-        .byte #%00000000 ; buffer line that clears sprite on last line
-        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
-        .byte #%00000000 ; buffer line that clears sprite on last line
-
-WALL_COLOR_DATA
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
-        .byte #$EF;
 ;---End Color Data---
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1039,6 +986,208 @@ PFData2
  .byte #%00000000
  .byte #%00000000
  .byte #%00000000
+
+WallData
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+  .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000 
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+ .byte #%00000000
+
 
 ; Epilogue
 
