@@ -6,8 +6,28 @@
 ;;;;; PlayerPal 2600 (http://www.alienbill.com/2600/playerpalnext.html and http://alienbill.com/2600/playfieldpal.html)
 ;;;;; Making Games for the Atari 2600 by Steven Hugg
 
+;;;;; FriendShip is an Atari 2600 game built as part of One Game A Month (http://www.onegameamonth.com/)
+;;;;; It is primarily a project to learn how to develop 2600 games in assembly language, so is very tech driven.
+;;;;; In addition I wanted to grapple with some of the challenges, so the game kernel is my own (and not one of the certainly better
+;;;;; ones available)
+;;;;;
+;;;;; Basic concept: you sail your ship using the joystick (plugged into left joystick port)
+;;;;; You'll be blocked by yellow sandbars. 
+;;;;; Your goal is to reach the other ship, your friend
+;;;;; Your progress is timed. When time runs out, the level restarts
+;;;;;
+;;;;; Architecture
+;;;;; The main ship is just the player 0
+;;;;; The primary maze is drawn through reflected playfields
+;;;;; Additional walls are put in place to make it asynchronous.
+
 ;;;;; Todos!
-;;;;; Change line count to a variable instead of y? use y for temp indexing.
+
+;;; Position wall in X. This will be tricky given timing. Maybe draw wall in playfield (and walls only drawn passed X?)
+;;; Wall has to be past color clock 81/pixel position 13 (this is when sprite has been drawn)   
+;;; Need to check wall collisions
+;;; draw multiple wall (optionally)
+
 ;;; CONCEPT: MooseMaze
 ;;; TODOS:
 ;;; Color cycle 
@@ -32,9 +52,8 @@ Player_Y                .byte ; Y position of player sprite.
 Player_X_Tmp            .byte 
 Player_Y_Tmp            .byte 
 
-; For use with subroutines
-Spritedraw_Sprite_Ptr .word
-Spritedraw_Sprite_YPos .byte
+Wall_X .byte
+Wall_Y .byte
 
 ; For drawing playfield
 PF_frame_counter          .byte
@@ -44,6 +63,7 @@ PLAYER_START_Y  equ #165 ; needs to be odd
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #18 ; this is really 2ma greater than sprite height, there's a buffer empty line that clears the sprite
+WALL_SPRITE_HEIGHT equ #20 
 PLAYFIELD_BLOCK_HEIGHT equ #8
 PLAYFIELD_ROWS equ #22
 
@@ -152,21 +172,50 @@ ScanLoop
         sta PF2
 
         ; Setup for sprite drawing 
-        lda #<Player_Sprite_Data ; sprite 0, player
-        sta Spritedraw_Sprite_Ptr
-        lda #>Player_Sprite_Data
-        sta Spritedraw_Sprite_Ptr+1
-        lda Player_Y
-        sta Spritedraw_Sprite_YPos
+        lda #170
+        sta Wall_Y
 
         ; Wait for next scanline and decrement
         sta WSYNC
         dey
 
         ; Draw player sprite
-        jsr DrawSprite
+        lda Player_Y
+        sty Temp  ; store our current line count into a temp variable, then subtract it from sprite position
+        sbc Temp  
+        bmi PlayerDone ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
+        
+        ; Jump to end if we are past the end of the sprite
+        tax
+        cpx #PLAYER_SPRITE_HEIGHT
+        bcs PlayerDone
 
+        ; Draw the current line of the sprite
+        lda Player_Sprite_Data,x
+        sta GRP0
+        lda PLAYER_COLOR_DATA,x
+        sta COLUP0
+
+        ; Draw wall sprite
+PlayerDone
+        lda Wall_Y
+        sty Temp  ; store our current line count into a temp variable, then subtract it from sprite position
+        sbc Temp  
+        bmi WallDone ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
+        tax
+        cpx #WALL_SPRITE_HEIGHT
+        bcs WallDone
+        lda #$FF ; wall is just a straight line
+        sta GRP1
+        lda #BORDER_COLOR
+        sta COLUP1
+        jmp CheckScoreboard
+        
+WallDone
+        lda #$00
+        sta GRP1 ; clear wall sprite
         ; If we've reached bottom of scoreboard, activate playfield background
+CheckScoreboard
         cpy #SCOREBOARD_HEIGHT
         bne ScanLoopEnd
         lda #PLAYFIELD_BACKGROUND_COLOR
@@ -203,27 +252,15 @@ DrawSprite
     ;; due to the two-line kernel. 
     ;; (!) This routine will blow out the X and A registers
 
-    ;; set Spritedraw_Sprite_Ptr and Spritedraw_Sprite_YPos before calling
 
-    lda Spritedraw_Sprite_YPos
-    sty Temp  ; store our current line count into a temp variable, then subtract it from sprite position
-    sbc Temp  
-    bmi .Return ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
-    
-    ; Jump to end if we are past the end of the sprite
-    tay
-    cpy #PLAYER_SPRITE_HEIGHT
-    bcs .Return
-
-    ; indirect mode only works with y?
-    ; Draw the current line of the sprite
-    lda (Spritedraw_Sprite_Ptr),y
-    sta GRP0
-    lda PLAYER_COLOR_DATA,y
-    sta COLUP0
 .Return
-    ldy Temp
     rts
+
+DrawWallSprite
+
+.Return2
+    rts
+
 
 ; Handle the (very timing dependent) adjustment of X position for the player
 PositionPlayerX
@@ -357,7 +394,50 @@ PLAYER_COLOR_DATA
         .byte #$F4;
 ;---End Color Data---
 
+Wall_Sprite_Data
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$0C
+        .byte #%11111111;$F4
+        .byte #%11111111;$F4
+        .byte #%11111111;$F4
+        .byte #%11111111;$F4
+        .byte #%11111111;$F4
+        .byte #%11111111;$F4
+        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
+        .byte #%00000000 ; buffer line that clears sprite on last line
+        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
+        .byte #%00000000 ; buffer line that clears sprite on last line
 
+WALL_COLOR_DATA
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+        .byte #$EF;
+;---End Color Data---
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

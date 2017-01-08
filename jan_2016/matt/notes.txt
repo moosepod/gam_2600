@@ -1,0 +1,3 @@
+1/8/2017
+- Had a subroutine written that took in both a player position and a pointer to sprite data, but this ended up taking too many clock cycles to draw the wall and the player, so refactored it into dedicated drawing subroutines. I guess I could skip the jsr/rts if i really needed the cycles.
+- Tried doing async playfields -- problem is then you have to swap the playfield on _both_ scan lines of the kernel, or you're going to be drawing the second half of the playfield on the first half of line two. THis removes any additional cycles you get by usign a two line kernel. 
