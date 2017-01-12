@@ -95,7 +95,8 @@ Initialize
         sta Player_X
         lda #PLAYER_START_Y
         sta Player_Y
-
+        lda #81
+        sta Wall_X
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Kernel        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -128,7 +129,10 @@ NextFrame
         sta GRP0
 
         jsr PositionPlayerX ; 2 scanlines
-        ldx #30
+        jsr PositionWall ; 2 scanlines
+        sta HMOVE ; Lock in the positionings
+
+        ldx #28
 PreLoop dex
         sta WSYNC
         bne PreLoop
@@ -167,6 +171,20 @@ ScanLoop
         ; test for mod 8 directly, we compare with a precalculated list of indexes
 
         ; Draw background
+        ;lda #0
+        cmp Wall_X
+        ;bne NotInPos1
+        ;sta RESP
+        
+        lda PFData0,y
+        sta PF0
+        lda PFData1,y
+        sta PF1
+        lda PFData2,y
+        sta PF2
+        jmp PastLoop2
+
+NotInPos1
         lda PFData0,y
         sta PF0
         lda PFData1,y
@@ -174,6 +192,14 @@ ScanLoop
         lda PFData2,y
         sta PF2
 
+        ; Position our wall sprite for this line
+        ldx Wall_X
+WallSpriteLoop
+        dex
+        bne WallSpriteLoop
+        sta RESP1
+
+PastLoop2
         ; Wait for next scanline and decrement
         sta WSYNC
         dey
@@ -265,9 +291,9 @@ PositionPlayerX
         sta HMCLR ; Clear old horizontal pos
 
         ; Divide the X position by 15, the # of TIA color clocks per loop
-DivideLoop
+DivideLoopX
         sbc #15
-        bcs DivideLoop
+        bcs DivideLoopX
 
         ; A will contain remainder of division. Convert to fine adjust
         ; which is -7 to +8
@@ -279,8 +305,35 @@ DivideLoop
         sta HMP0                ; set the fine position
 
         sta RESP0               ; set the coarse position
+
+        lda #$70 ; manually adjust player 1 (wall) to a fixed positioning
+        sta HMP1 
         sta WSYNC
         sta HMOVE               ; set the fine positioning
+
+        rts
+
+; Handle the (very timing dependent) adjustment of X position for wall
+PositionWall
+        lda Wall_X
+        sec
+        sta WSYNC
+
+        ; Divide the X position by 15, the # of TIA color clocks per loop
+DivideLoopWall
+        sbc #15
+        bcs DivideLoopWall
+
+        ; A will contain remainder of division. Convert to fine adjust
+        ; which is -7 to +8
+        eor #7  ; calcs (23-A) % 16
+        asl
+        asl
+        asl
+        asl
+        sta HMP1                ; set the fine position
+        sta RESP1               ; set the coarse position
+        sta WSYNC
 
         rts
 
@@ -340,7 +393,7 @@ CheckJoystick
 .Done
         stx Player_Y
         sta CXCLR ; clear collision checks
-
+.JoystickReturn
         rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
