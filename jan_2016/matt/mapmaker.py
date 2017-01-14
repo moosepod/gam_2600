@@ -9,26 +9,37 @@ MAP_ROW_SIZE=20
 
 # x is a base wall
 # o is a wall only on the reflected side. can only be used in columns 2-4 (0-indexed)
-MAP_DATA=['x..o...x..',
-		  'x..x.x...x',
-		  'x..xxxxxxx',
-		  'x.........',
-		  'xxxxxxxx.x',
-		  'x......x.x',
-		  'x.xxxxxx.x',
-		  'x.........']
+#            cccc         cccxx              
+MAP_DATA=['x....xxx....xxxxx..x',
+		  'xxxx.....xx.......xx',
+		  'x..xxxxxxxxxxxxxx..x',
+		  'x........xx.....xx.x',
+		  'x.xx.xxx.xx.xxx.xx.x',
+		  'x.x....x.xx.x...xx.x',
+		  'x.x.xxxx.xx.xxx....x',
+		  'xxx...........x..xxx'] 
+
+# This pattern can be used for checking the alignment of the async playfield
+# MAP_DATA=['x.xxxxx.x.x.x.....x.',
+# 		  '.xxxxxxx.x.x.x.....x',
+# 		  'x.xxxxx.x.x.x.....x.',
+# 		  '.xxxxxxx.x.x.x.....x',
+# 		  'x.xxxxx.x.x.x.....x.',
+# 		  '.xxxxxxx.x.x.x.....x',
+# 		  'x.xxxxx.x.x.x.....x.',
+# 		  '.xxxxxxx.x.x.x.....x',
+# 		  ]
 
 def parse_map_data(data):
 	rows = []
 	for line in data:
 		row = []
 		rows.append(row)
-		cells = line.replace('.','0').replace('x','1').replace('o','0')
+		cells = line.replace('.','0').replace('x','1')
 		row.extend((cells[1],cells[1],cells[0],cells[0]))
 		row.extend((cells[2],cells[2],cells[3],cells[3],cells[4],cells[4],cells[5],cells[5]))
 		row.extend((cells[9],cells[9],cells[8],cells[8],cells[7],cells[7],cells[6],cells[6]))
-		cells = line.replace('.','0').replace('x','1').replace('o','1')
-		row.extend((cells[2],cells[2],cells[3],cells[3],cells[4],cells[4],cells[5],cells[5]))
+		row.extend((cells[17],cells[17],cells[16],cells[16],cells[15],cells[15],cells[14],cells[14]))
 	return rows
 
 def main():
@@ -72,14 +83,14 @@ def main():
 
 	print ''
 	print "PFData3"
-	for i in range(0,BORDER_WIDTH):
+	for i in range(0,BORDER_WIDTH-1): # not sure why but this needs to be one row shorter here and one longer at end
 		print ' .byte #%11111111'
 	for row in map_data:
 		for i in range(0,MAP_ROW_SIZE):
 			print ' .byte #%' + ''.join(row[20:28])
 	for i in range(0,BORDER_WIDTH):
 		print ' .byte #%11111111'
-	for i in range(0,SCOREBOARD_HEIGHT):
+	for i in range(0,SCOREBOARD_HEIGHT+1):
 		print ' .byte #%00000000'
 
 
