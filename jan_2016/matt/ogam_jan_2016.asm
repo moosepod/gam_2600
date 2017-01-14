@@ -19,14 +19,9 @@
 ;;;;; Architecture
 ;;;;; The main ship is just the player 0
 ;;;;; The primary maze is drawn through reflected playfields
-;;;;; Additional walls are put in place to make it asynchronous.
+;;;;; Additional walls are put in place to make it asynchronous using an async playfield
 
 ;;;;; Todos!
-
-;;; Position wall in X. This will be tricky given timing. Maybe draw wall in playfield (and walls only drawn passed X?)
-;;; Wall has to be past color clock 81/pixel position 13 (this is when sprite has been drawn)   
-;;; Need to check wall collisions
-;;; draw multiple wall (optionally)
 
 ;;; CONCEPT: MooseMaze
 ;;; TODOS:
@@ -170,6 +165,7 @@ ScanLoop
         lda PFData2,y
         sta PF2
         
+        ; Use nops to hit the pixel we want to swap playfield on
         nop 
         nop
         nop
@@ -184,6 +180,7 @@ ScanLoop
         lda PFData3,y
         sta PF1
 
+        ; Use nops to hit the pixel we want to swap playfield on
         nop
         nop
         nop
@@ -206,10 +203,10 @@ ScanLoop
         bcs UpdatePlayfieldNoSprite
 
         ; Draw the current line of the sprite
-        lda Player_Sprite_Data,x
-        sta GRP0
         lda PLAYER_COLOR_DATA,x
         sta COLUP0
+        lda Player_Sprite_Data,x
+        sta GRP0
 UpdatePlayfieldSprite
         ldx #2
         jmp UpdatePlayfieldLoop
@@ -296,8 +293,6 @@ DivideLoopX
 
         sta RESP0               ; set the coarse position
 
-        lda #$70 ; manually adjust player 1 (wall) to a fixed positioning
-        sta HMP1 
         sta WSYNC
         sta HMOVE               ; set the fine positioning
 

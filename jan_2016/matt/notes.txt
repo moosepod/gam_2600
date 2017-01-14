@@ -12,3 +12,5 @@
 - Ahaha -- what if we used all the spare vsync cycles to calculate the various X offsets for the walls? But then we still have to find the coarse position...
 - Do i have time to change one of the pfs and then back again? Time it out with some nops.
 - Success!
+- What causes the weird anonmaly across the X axis?
+- I changed the ordering and it changed the anomaly to a "warp".
