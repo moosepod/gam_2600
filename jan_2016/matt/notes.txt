@@ -4,4 +4,11 @@
 
 1/12/2017
 - Trying to fiddle with horizontal position of wall 
-- Experimented with just single X set for wall.
+- Experimented  with just single X set for wall.
+
+1/14/2017
+- I think i can get the X for the walls on scan line 1 if i add an offset adjustment. 	
+- Too many cycles elapsed.
+- Ahaha -- what if we used all the spare vsync cycles to calculate the various X offsets for the walls? But then we still have to find the coarse position...
+- Do i have time to change one of the pfs and then back again? Time it out with some nops.
+- Success!

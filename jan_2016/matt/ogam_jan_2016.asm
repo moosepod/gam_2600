@@ -52,9 +52,6 @@ Player_Y                .byte ; Y position of player sprite.
 Player_X_Tmp            .byte 
 Player_Y_Tmp            .byte 
 
-Wall_X .byte
-Wall_Y .byte
-
 ; For drawing playfield
 PF_frame_counter          .byte
 
@@ -63,7 +60,6 @@ PLAYER_START_Y  equ #165 ; needs to be odd
 PLAYER_SPRITE   equ #$FF   ; Sprite (1 line) for our ball
 PLAYER_COLOR    equ #$60 ; Color for ball
 PLAYER_SPRITE_HEIGHT equ #18 ; this is really 2ma greater than sprite height, there's a buffer empty line that clears the sprite
-WALL_SPRITE_HEIGHT equ #20 
 PLAYFIELD_BLOCK_HEIGHT equ #8
 PLAYFIELD_ROWS equ #22
 
@@ -95,8 +91,6 @@ Initialize
         sta Player_X
         lda #PLAYER_START_Y
         sta Player_Y
-        lda #81
-        sta Wall_X
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Kernel        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,8 +123,6 @@ NextFrame
         sta GRP0
 
         jsr PositionPlayerX ; 2 scanlines
-        jsr PositionWall ; 2 scanlines
-        sta HMOVE ; Lock in the positionings
 
         ldx #28
 PreLoop dex
@@ -170,72 +162,72 @@ ScanLoop
         ; we expand our playfield data vertically into units 8 tall. Rather than
         ; test for mod 8 directly, we compare with a precalculated list of indexes
 
-        ; Draw background
-        ;lda #0
-        cmp Wall_X
-        ;bne NotInPos1
-        ;sta RESP
+        ; Draw background        
+        lda PFData0,y
+        sta PF0
+        lda PFData1,y
+        sta PF1
+        lda PFData2,y
+        sta PF2
         
-        lda PFData0,y
-        sta PF0
+        nop 
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+
+        lda PFData4,y
+        sta PF1
+
+        nop
+        nop
+        nop
+
         lda PFData1,y
         sta PF1
-        lda PFData2,y
-        sta PF2
-        jmp PastLoop2
 
-NotInPos1
-        lda PFData0,y
-        sta PF0
-        lda PFData1,y
-        sta PF1
-        lda PFData2,y
-        sta PF2
-
-        ; Position our wall sprite for this line
-        ldx Wall_X
-WallSpriteLoop
-        dex
-        bne WallSpriteLoop
-        sta RESP1
-
-PastLoop2
-        ; Wait for next scanline and decrement
         sta WSYNC
-        dey
+        ;sta HMOVE ; Lock in the positionings
+        dey ; decrement main line counter
+
 
         ; Draw player sprite
         lda Player_Y
         sty Temp  ; store our current line count into a temp variable, then subtract it from sprite position
         sbc Temp  
-        bmi PlayerDone ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
+        bmi UpdatePlayfieldNoSprite ; If the subtraction is negative, we are above (closer to top of screen) for this sprite
         
         ; Jump to end if we are past the end of the sprite
         tax
         cpx #PLAYER_SPRITE_HEIGHT
-        bcs PlayerDone
+        bcs UpdatePlayfieldNoSprite
 
         ; Draw the current line of the sprite
         lda Player_Sprite_Data,x
         sta GRP0
         lda PLAYER_COLOR_DATA,x
         sta COLUP0
+UpdatePlayfieldSprite
+        ldx #2
+        jmp UpdatePlayfieldLoop
+UpdatePlayfieldNoSprite
+        ldx #3
+        jmp UpdatePlayfieldLoop
+UpdatePlayfieldLoop
+        ; x will have number of loops based on previous work on scanline
+        ; to push cycle to point to switch playfield
+        dex
+        bne UpdatePlayfieldLoop
 
-        ; Draw wall sprite
-PlayerDone
-        ; if the byte in our wall data for this row is positive, draw the wall sprite
-        lda WallData,y
-        cmp #0
-        beq NoWall
-        lda #$FF ; wall is just a straight line
-        sta GRP1
-        lda #BORDER_COLOR
-        sta COLUP1
-        jmp CheckScoreboard
-NoWall
-        lda #$00
-        sta GRP1 ; clear wall sprite
-        ; If we've reached bottom of scoreboard, activate playfield background
+        ; Swap playfield bytes
+        lda PFData4,y
+        sta PF1
+
 CheckScoreboard
         cpy #SCOREBOARD_HEIGHT
         bne ScanLoopEnd
@@ -313,29 +305,6 @@ DivideLoopX
 
         rts
 
-; Handle the (very timing dependent) adjustment of X position for wall
-PositionWall
-        lda Wall_X
-        sec
-        sta WSYNC
-
-        ; Divide the X position by 15, the # of TIA color clocks per loop
-DivideLoopWall
-        sbc #15
-        bcs DivideLoopWall
-
-        ; A will contain remainder of division. Convert to fine adjust
-        ; which is -7 to +8
-        eor #7  ; calcs (23-A) % 16
-        asl
-        asl
-        asl
-        asl
-        sta HMP1                ; set the fine position
-        sta RESP1               ; set the coarse position
-        sta WSYNC
-
-        rts
 
 ; This subroutine checks the player one joystick and moves the player accordingly
 CheckJoystick
@@ -1039,6 +1008,398 @@ PFData2
  .byte #%00000000
  .byte #%00000000
  .byte #%00000000
+
+PFData3
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+
+PFData4
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
+ .byte #%11111111
 
 WallData
  .byte #%00000000
