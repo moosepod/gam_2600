@@ -13,11 +13,11 @@ MAP_ROW_SIZE=20
 MAP_DATA=['x....xxx....xxxxx..x',
 		  'xxxx.....xx.......xx',
 		  'x..xxxxxxxxxxxxxx..x',
-		  'x........xx.....xx.x',
-		  'x.xx.xxx.xx.xxx.xx.x',
+		  'x...x....xx.....xx.x',
+		  'x.x.x.xx.xx.xxx.xx.x',
 		  'x.x....x.xx.x...xx.x',
-		  'x.x.xxxx.xx.xxx....x',
-		  'xxx...........x..xxx'] 
+		  'x.xxxxxx.xx.xxx....x',
+		  'x..x..........xxxxxx'] 
 
 # This pattern can be used for checking the alignment of the async playfield
 # MAP_DATA=['x.xxxxx.x.x.x.....x.',
@@ -60,7 +60,7 @@ def main():
 	print ''
 	print "PFData1"
 	for i in range(0,BORDER_WIDTH):
-		print ' .byte #%11111111'
+		print ' .byte #%00111111'
 	for row in map_data:
 		for i in range(0,MAP_ROW_SIZE):
 			print ' .byte #%' + ''.join(row[4:12])

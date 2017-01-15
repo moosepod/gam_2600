@@ -14,3 +14,9 @@
 - Success!
 - What causes the weird anonmaly across the X axis?
 - I changed the ordering and it changed the anomaly to a "warp".
+- cart doesn't run on harmony. maybe need to add .4k as suffix?
+
+GOAL: make map generator using make
+- Have map file
+- Make compiles this file
+- Make merges this file
