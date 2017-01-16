@@ -20,3 +20,10 @@ GOAL: make map generator using make
 - Have map file
 - Make compiles this file
 - Make merges this file
+
+- Make done!
+
+1/15/2017
+- Decided to start from scratch and get map part done first
+- width/height of 8 (using shift)
+- try to get whole playfield shifted
