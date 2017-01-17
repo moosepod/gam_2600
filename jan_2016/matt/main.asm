@@ -40,7 +40,7 @@ Start
         CLEAN_START
 
 Initialize
-		lda #0
+		lda #1
 		sta CTRLPF
 
 NextFrame
@@ -83,28 +83,33 @@ Kernel
 		tay
 
 		; Draw playfield        
-        lda PFData0,y
+        lda #$C0
         sta PF0
         lda PFData1,y
         sta PF1
         lda PFData2,y
         sta PF2
+
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
 
         ; Immediately switch to second playfield
-        lda PFData3,y
-        sta PF0
-        lda PFData4,y
-        sta PF1
         lda PFData5,y
         sta PF2
+        lda PFData4,y
+        sta PF1
 
        	; And back       
-        lda PFData0,y
-        sta PF0
-        lda PFData1,y
-        sta PF1
         lda PFData2,y
         sta PF2
+        lda PFData1,y
+        sta PF1
 
 		sta WSYNC
 
@@ -129,14 +134,15 @@ Kernel
 		nop
 		nop
 		nop
+		nop
+		nop
+		nop
 
 		; Switch to second playfield
-        lda PFData3,y
-        sta PF0
-        lda PFData4,y
-        sta PF1
         lda PFData5,y
         sta PF2
+        lda PFData4,y
+        sta PF1
 
 		ldy CurrentLine	
 		dey
@@ -169,31 +175,31 @@ PostLoop
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PFData0
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
 
 PFData1
  .byte #%01010101
@@ -252,31 +258,31 @@ PFData2
 
 
 PFData3
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%01010000
- .byte #%10100000
- .byte #%10100000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
+ .byte #%11110000
 
 PFData4
  .byte #%10101010

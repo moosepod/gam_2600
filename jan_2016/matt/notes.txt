@@ -31,3 +31,4 @@ GOAL: make map generator using make
 
 1/16/2017 
 - Got everything but last 4 bits in second playfield pixels or so working. Just make those ones the same?
+- OK -- if I switch to flipped playfield and make the PF0 border only, i have the extra cycles needed to fit in the map.
