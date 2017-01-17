@@ -24,7 +24,7 @@
 
 CurrentLine                    .byte
 
-BORDER_COLOR equ #$EE ; last bit has to be 0 - to skip playfield reflection
+BORDER_COLOR equ #$EE 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -40,7 +40,8 @@ Start
         CLEAN_START
 
 Initialize
-		nop
+		lda #0
+		sta CTRLPF
 
 NextFrame
         lsr SWCHB       ; test Game Reset switch
@@ -62,7 +63,6 @@ UnderscanExtraLoop dex
         sta COLUPF
 
         ; Setup for start of kernel
-		ldy #23 ; we start on the 24th line of data (23)
         lda #192 ; number of lines in main loop
         sta CurrentLine
 ;;
@@ -77,10 +77,10 @@ Kernel
 		
 		; cycle until we hit the right spot to switch playfields and back
 		sta WSYNC
-		nop
-		nop
-		nop
-		nop
+		lsr
+		lsr
+		lsr ; 3 lsr = Divide by 8 to get our index 
+		tay
 
 		; Draw playfield        
         lda PFData0,y
@@ -98,7 +98,6 @@ Kernel
         lda PFData5,y
         sta PF2
 
-
        	; And back       
         lda PFData0,y
         sta PF0
@@ -112,6 +111,11 @@ Kernel
 		; Line 2 of kernel
 
 		; Need to draw alternate playfield after 26 cycles
+		nop
+		nop
+		nop
+		nop
+		nop
 		nop
 		nop
 		nop
@@ -142,12 +146,7 @@ Kernel
 
 		; Calculate our y index for the next playfield
 		tya
-		lsr
-		lsr
-		lsr ; 3 lsr = Divide by 8 to get our index 
-		tay
-		cmp #0
-		bne Kernel
+		bne Kernel ; the lsr should set the Z flag
 ;;
 ;; 30 lines of overscan
 ;;
@@ -248,7 +247,9 @@ PFData2
  .byte #%01010101
  .byte #%10101010
  .byte #%01010101
+ .byte #%10101010
  .byte #%01010101
+
 
 PFData3
  .byte #%01010000
@@ -327,7 +328,6 @@ PFData5
  .byte #%10101010
  .byte #%01010101
  .byte #%10101010
- .byte #%01010101
  .byte #%01010101
  .byte #%10101010
 

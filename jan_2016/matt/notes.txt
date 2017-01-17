@@ -27,3 +27,7 @@ GOAL: make map generator using make
 - Decided to start from scratch and get map part done first
 - width/height of 8 (using shift)
 - try to get whole playfield shifted
+- Mostly working. Need to figure out why (a) top is extended (b) anomaly in center (c) anomaly at end. Compare with un-reset version to see what is expected.
+
+1/16/2017 
+- Got everything but last 4 bits in second playfield pixels or so working. Just make those ones the same?

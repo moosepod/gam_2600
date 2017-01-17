@@ -2,8 +2,6 @@
         include "vcs.h"
         include "macro.h"
 
-;;;;; Started this from scratch to try to get the maps down first
-
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
 ;;;;; PlayerPal 2600 (http://www.alienbill.com/2600/playerpalnext.html and http://alienbill.com/2600/playfieldpal.html)
 ;;;;; Making Games for the Atari 2600 by Steven Hugg
