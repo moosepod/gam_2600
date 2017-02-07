@@ -22,7 +22,12 @@
         seg.u Variables
         org $80
 
-CurrentLine                    .byte
+PLAYER_START_X  equ #8
+PLAYER_START_Y  equ #170 ; needs to be odd
+
+CurrentLine             .byte
+Player_X                .byte ; X position of ball sprint
+Player_Y                .byte ; Y position of player sprite. 
 
 BORDER_COLOR equ #$EE 
 
@@ -40,6 +45,10 @@ Start
         CLEAN_START
 
 Initialize
+        lda #PLAYER_START_X
+        sta Player_X
+        lda #PLAYER_START_Y
+        sta Player_Y
 		lda #1
 		sta CTRLPF
 
@@ -115,7 +124,7 @@ Kernel
 
 		; Line 2 of kernel
 
-		; Need to draw alternate playfield after 26 cycles
+		; Need to draw alternate playfield after 21 cycles
 		nop
 		nop
 		nop
@@ -173,6 +182,57 @@ PostLoop
 ;;; This file will be merged by make with the map data (map.asm) and the footer (footer.asm)
 ;;; So edit main.asm then use make
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    align $100; make sure data doesn't cross page boundary
+
+Player_Sprite_Data
+        .byte #%00011000;$0C
+        .byte #%00011000;$0C
+        .byte #%00011100;$0C
+        .byte #%00011100;$0C
+        .byte #%00011110;$0C
+        .byte #%00011110;$0C
+        .byte #%00010000;$0C
+        .byte #%00010000;$0C
+        .byte #%00010000;$0C
+        .byte #%00010000;$0C
+        .byte #%01111110;$F4
+        .byte #%01111110;$F4
+        .byte #%01111110;$F4
+        .byte #%01111110;$F4
+        .byte #%00111100;$F4
+        .byte #%00111100;$F4
+        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
+        .byte #%00000000 ; buffer line that clears sprite on last line
+        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
+        .byte #%00000000 ; buffer line that clears sprite on last line
+;---End Graphics Data---
+
+;---Color Data from PlayerPal 2600---
+
+; color lines are doubled up to account for our two line kernel.
+PLAYER_COLOR_DATA
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$0C;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+        .byte #$F4;
+;---End Color Data---
 
 PFData0
  .byte #%11110000
