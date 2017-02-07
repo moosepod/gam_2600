@@ -36,3 +36,4 @@ GOAL: make map generator using make
 2/7/2016
 - Ok am back!
 - Generate map from PF1,PF2,PF3,PF4 meaning 32 wide, 24 high
+- Added a spiral maze
