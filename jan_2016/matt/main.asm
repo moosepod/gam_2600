@@ -28,8 +28,12 @@ PLAYER_START_Y  equ #170 ; needs to be odd
 CurrentLine             .byte
 Player_X                .byte ; X position of ball sprint
 Player_Y                .byte ; Y position of player sprite. 
+Player_X_Tmp            .byte 
+Player_Y_Tmp            .byte 
 
 BORDER_COLOR equ #$EE 
+MAX_Y equ #173
+MIN_Y equ #16
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -63,7 +67,17 @@ NextFrame
 ;; 37 lines of underscan total
 ;;
 
-		ldx #36
+        ; Check joysticks. This will use 2 scanlines in total
+        sta WSYNC ; Give our joystick check a full scanline
+        jsr CheckJoystick
+
+        ; Clear sprite , then position sprite on X
+        lda #00
+        sta GRP0
+
+        jsr PositionPlayerX ; 2 scanlines
+    
+		ldx #32
 UnderscanExtraLoop dex
         sta WSYNC
         bne UnderscanExtraLoop
@@ -124,7 +138,16 @@ Kernel
 
 		; Line 2 of kernel
 
-		; Need to draw alternate playfield after 21 cycles
+		; Need to draw alternate playfield after exactly 21 cycles
+         tya ; 2 cycles
+         sbc Player_X ; 3 cycles
+;         bne NoPlayer ; 2 cycles if fall through, 3 if taken
+;         lda #$CC ; 2 cycles
+;         sta COLUP0 ; 3 cycles
+;         lda #$E0 ; 2 cycles
+;         sta GRP0 ; 3 cycles
+;         jmp SecondPlayfield ; 3 cycles
+NoPlayer
 		nop
 		nop
 		nop
@@ -132,8 +155,9 @@ Kernel
 		nop
 		nop
 		nop
-		nop
-		nop
+SecondPlayfield
+;		nop
+;		nop
 		nop
 		nop
 		nop
@@ -177,6 +201,89 @@ PostLoop
         bne PostLoop
 
         jmp NextFrame
+
+; Handle the (very timing dependent) adjustment of X position for the player
+PositionPlayerX
+        lda Player_X
+        sec
+        sta WSYNC
+        sta HMCLR ; Clear old horizontal pos
+
+        ; Divide the X position by 15, the # of TIA color clocks per loop
+DivideLoopX
+        sbc #15
+        bcs DivideLoopX
+
+        ; A will contain remainder of division. Convert to fine adjust
+        ; which is -7 to +8
+        eor #7  ; calcs (23-A) % 16
+        asl
+        asl
+        asl
+        asl
+        sta HMP0                ; set the fine position
+
+        sta RESP0               ; set the coarse position
+
+        sta WSYNC
+        sta HMOVE               ; set the fine positioning
+
+        rts
+
+; This subroutine checks the player one joystick and moves the player accordingly
+CheckJoystick
+        ; First do any collision checks. Check player 0 with playfield (bit 1)
+        ;bit CXP0FB ; Player 0/Playfield
+        ;bpl .NoCollision
+        ;jmp .ResetPlayerPos
+.NoCollision
+        ldx Player_X
+        stx Player_X_Tmp ; Store so we can restore on collsion
+        lda SWCHA
+        and #$80 ; 1000000
+        sta WSYNC ; make time for rest of logic
+        beq .TestRight  ; checks bit 7 set
+        dex 
+.TestRight
+        lda SWCHA
+        and #$40 ; 0100000
+        beq .TestUp ; checks bit 6 set
+        inx
+.TestUp
+        stx Player_X        
+        ; Now we repeat the process but with a SWCHA that is shifted left twice, so down is 
+        ; bit 7 and up is bit 6
+        ldx Player_Y
+        stx Player_Y_Tmp ; Store so we can restore on collsion
+        lda SWCHA
+        and #$20 ; 00100000
+        beq .TestDown  ; checks bit 5 set
+        ; We need to do an explicit range check on Player_Y or the drawing kernel gets thrown off
+        ; and collisions with border don't trigger properly
+        cpx #MAX_Y
+        beq .Done
+        inx   
+        inx ; we move in units of 2 Y positions to match kernel
+.TestDown
+        lda SWCHA
+        and #$10 ; 00010000
+        beq .Done ; checks bit 4 set
+        cpx #MIN_Y
+        beq .Done
+        dex
+        dex ; we move in units of 2 Y positions to match kernel
+        jmp .Done
+.ResetPlayerPos
+        sta WSYNC ; mirror WSYNC with non-collsion logic
+        ldx Player_X_Tmp
+        stx Player_X
+        ldx Player_Y_Tmp
+        stx Player_Y
+.Done
+        stx Player_Y
+        sta CXCLR ; clear collision checks
+.JoystickReturn
+        rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; This file will be merged by make with the map data (map.asm) and the footer (footer.asm)
@@ -234,6 +341,7 @@ PLAYER_COLOR_DATA
         .byte #$F4;
 ;---End Color Data---
 
+; To make timing work, left/right side of screen is alway a wall.
 PFData0
  .byte #%11110000
  .byte #%11110000
