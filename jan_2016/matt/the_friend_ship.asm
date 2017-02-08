@@ -23,7 +23,7 @@
         org $80
 
 PLAYER_START_X  equ #8
-PLAYER_START_Y  equ #170 ; needs to be odd
+PLAYER_START_Y  equ #170 ; needs to be even
 
 CurrentLine             .byte
 Player_X                .byte ; X position of ball sprint
@@ -139,30 +139,36 @@ Kernel
 		; Line 2 of kernel
 
 		; Need to draw alternate playfield after exactly 21 cycles
-         tya ; 2 cycles
-         sbc Player_X ; 3 cycles
-;         bne NoPlayer ; 2 cycles if fall through, 3 if taken
-;         lda #$CC ; 2 cycles
-;         sta COLUP0 ; 3 cycles
-;         lda #$E0 ; 2 cycles
-;         sta GRP0 ; 3 cycles
-;         jmp SecondPlayfield ; 3 cycles
+         lda CurrentLine ; 3 cycles
+         cmp Player_Y ; 2 cycles
+         bne NoPlayer ; 2 cycles if fall through, 3 if taken
+         lda #$CC ; 2 cycles
+         sta COLUP0 ; 3 cycles
+         lda #$E0 ; 2 cycles
+         sta GRP0 ; 3 cycles
+         jmp SecondPlayfield ; 3 cycles
 NoPlayer
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
 SecondPlayfield
+;        nop
+;        nop
+       ; nop
+        ;nop
+        nop
+        nop
+        nop
 ;		nop
 ;		nop
-		nop
-		nop
-		nop
-		nop
-		nop
+;		nop
+;		nop
+;		nop
+;		nop
+;		nop
 		nop
 		nop
 		nop
