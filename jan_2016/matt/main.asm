@@ -22,8 +22,8 @@
         seg.u Variables
         org $80
 
-PLAYER_START_X  equ #8
-PLAYER_START_Y  equ #170 ; needs to be even
+PLAYER_START_X  equ #$15
+PLAYER_START_Y  equ #$BC ; needs to be even
 
 CurrentLine             .byte
 Player_X                .byte ; X position of ball sprint
@@ -33,7 +33,7 @@ Player_Y_Tmp            .byte
 
 BORDER_COLOR equ #$EE 
 MAX_Y equ #173
-MIN_Y equ #16
+MIN_Y equ #0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -144,31 +144,19 @@ Kernel
          bne NoPlayer ; 2 cycles if fall through, 3 if taken
          lda #$CC ; 2 cycles
          sta COLUP0 ; 3 cycles
-         lda #$E0 ; 2 cycles
+         lda #$C0 ; 2 cycles
          sta GRP0 ; 3 cycles
          jmp SecondPlayfield ; 3 cycles
 NoPlayer
-        nop
-        nop
-        nop
-        nop
-        nop
+        lda #$00 ; 2 cycles
+        sta COLUP0 ; 3 cycles
+        lda #$00 ; 2 cycles
+        sta GRP0 ; 3 cycles
         nop
 SecondPlayfield
-;        nop
-;        nop
-       ; nop
-        ;nop
         nop
         nop
         nop
-;		nop
-;		nop
-;		nop
-;		nop
-;		nop
-;		nop
-;		nop
 		nop
 		nop
 		nop
@@ -239,9 +227,9 @@ DivideLoopX
 ; This subroutine checks the player one joystick and moves the player accordingly
 CheckJoystick
         ; First do any collision checks. Check player 0 with playfield (bit 1)
-        ;bit CXP0FB ; Player 0/Playfield
-        ;bpl .NoCollision
-        ;jmp .ResetPlayerPos
+        bit CXP0FB ; Player 0/Playfield
+        bpl .NoCollision
+        jmp .ResetPlayerPos
 .NoCollision
         ldx Player_X
         stx Player_X_Tmp ; Store so we can restore on collsion

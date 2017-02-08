@@ -39,3 +39,4 @@ GOAL: make map generator using make
 - Added a spiral maze
 - Working on adding in single-line sprite with vert/hozizontal movement
 - Note to self -- use CMP not SUB...lol.
+- And that's it -- one line sprite, and a maze, and movement, and collision!
