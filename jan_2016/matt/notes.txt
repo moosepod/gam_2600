@@ -33,10 +33,13 @@ GOAL: make map generator using make
 - Got everything but last 4 bits in second playfield pixels or so working. Just make those ones the same?
 - OK -- if I switch to flipped playfield and make the PF0 border only, i have the extra cycles needed to fit in the map.
 
-2/7/2016
+2/7/2017
 - Ok am back!
 - Generate map from PF1,PF2,PF3,PF4 meaning 32 wide, 24 high
 - Added a spiral maze
 - Working on adding in single-line sprite with vert/hozizontal movement
 - Note to self -- use CMP not SUB...lol.
 - And that's it -- one line sprite, and a maze, and movement, and collision!
+
+2/8/2017
+- Work on auto maze generation
