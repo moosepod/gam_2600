@@ -6,15 +6,8 @@
 ;;;;; PlayerPal 2600 (http://www.alienbill.com/2600/playerpalnext.html and http://alienbill.com/2600/playfieldpal.html)
 ;;;;; Making Games for the Atari 2600 by Steven Hugg
 
-;;;;; FriendShip is an Atari 2600 game built as part of One Game A Month (http://www.onegameamonth.com/)
-;;;;; It is primarily a project to learn how to develop 2600 games in assembly language, so is very tech driven.
-;;;;; In addition I wanted to grapple with some of the challenges, so the game kernel is my own (and not one of the certainly better
-;;;;; ones available)
-;;;;;
-;;;;; Basic concept: you sail your ship using the joystick (plugged into left joystick port)
-;;;;; You'll be blocked by yellow sandbars. 
-;;;;; Your goal is to reach the other ship, your friend ship
-;;;;; You can exit through various points to go to the next set of mazes
+;;;;; MooseMaze is barely a game. It's something I built for the "one game a month" project.
+;;;;; There's a maze. You can navigate it. That's it.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
@@ -32,6 +25,8 @@ Player_X_Tmp            .byte
 Player_Y_Tmp            .byte 
 
 BORDER_COLOR equ #$EE 
+BACKGROUND_COLOR equ #$76
+PLAYER_COLOR equ #$14
 MAX_Y equ #173
 MIN_Y equ #0
 
@@ -55,6 +50,8 @@ Initialize
         sta Player_Y
 		lda #1
 		sta CTRLPF
+        lda #BACKGROUND_COLOR
+        sta COLUBK
 
 NextFrame
         lsr SWCHB       ; test Game Reset switch
@@ -142,7 +139,7 @@ Kernel
          lda CurrentLine ; 3 cycles
          cmp Player_Y ; 2 cycles
          bne NoPlayer ; 2 cycles if fall through, 3 if taken
-         lda #$CC ; 2 cycles
+         lda #PLAYER_COLOR ; 2 cycles
          sta COLUP0 ; 3 cycles
          lda #$C0 ; 2 cycles
          sta GRP0 ; 3 cycles
@@ -164,6 +161,7 @@ SecondPlayfield
 		nop
 		nop
 		nop
+        nop
 
 		; Switch to second playfield
         lda PFData5,y

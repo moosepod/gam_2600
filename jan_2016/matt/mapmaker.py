@@ -154,7 +154,7 @@ class Cell(object):
     def __repr__(self):
         return unicode(self.point)
 
-def generate_map(rows,cols):
+def generate_map_cells(rows,cols):
     """ Use depth-first search algorithm https://en.wikipedia.org/wiki/Maze_generation_algorithm """
     matrix = []
     for y in range(0,rows):
@@ -201,8 +201,41 @@ def parse_map_data(data):
         row.extend(reversed(list(cells[24:32])))
     return rows
 
+def generate_map_data():
+    data = []
+    m = generate_map_cells(12,16)
+    for i, row in enumerate(m):
+        cols = []
+        for cell in row:
+            cols.append('x')
+            if cell.walls[NORTH]:
+                cols.append('x')
+            else:
+                cols.append('.')
+        cols.append('x')
+        data.append(''.join(cols))
+        cols = []
+        for cell in row:
+            if cell.walls[WEST]:
+                cols.append('x')
+            else:
+                cols.append('.')
+            if cell.visited:
+                cols.append('.')
+            else:
+                cols.append('x')
+        cols.append('x')
+        data.append(''.join(cols))
+        cols = []
+    for cell in row:
+        cols.append('x')
+        cols.append('x')
+    cols.append('x')
+    data.append(''.join(cols))
+    return data
+
 def main():
-    map_data = parse_map_data(MAP_DATA)
+    map_data = parse_map_data(generate_map_data())
     map_data.reverse() # byte order should be opposite of visual ordering 
     print ''
     print 'PFData1'
@@ -226,33 +259,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
     
-    # m = generate_map(12,16)
-    # for i, row in enumerate(m):
-    #     cols = []
-    #     for cell in row:
-    #         cols.append('x')
-    #         if cell.walls[NORTH]:
-    #             cols.append('x')
-    #         else:
-    #             cols.append('.')
-    #     cols.append('x')
-    #     print ''.join(cols)
-    #     cols = []
-    #     for cell in row:
-    #         if cell.walls[WEST]:
-    #             cols.append('x')
-    #         else:
-    #             cols.append('.')
-    #         if cell.visited:
-    #             cols.append('.')
-    #         else:
-    #             cols.append('x')
-    #     cols.append('x')
-    #     print ''.join(cols)
-    #     cols = []
-    # for cell in row:
-    #     cols.append('x')
-    #     cols.append('x')
-    # cols.append('x')
-    # print ''.join(cols)
