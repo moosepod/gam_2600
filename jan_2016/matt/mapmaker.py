@@ -85,6 +85,33 @@ MAP_DATA=['x.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
           'x.xxxxxxxxxxxxxxxxxxxxxxxxxxxx.x',
           'x..............................x',
           'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx']   
+MAP_DATA=[
+          'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+          'x.....x...............x.........x',
+          'xxxxx.x.xxxxxxxxxxxxx.x.xxxxx.x.x',
+          'x...x...x.x.........x.x.x.....x.x',
+          'x.x.xxxxx.x.xxxxx.x.x.xxx.xxxxx.x',
+          'x.x.........x.....x.x...x...x...x',
+          'x.xxxxxxxxxxx.xxxxx.xxx.x.x.x.xxx',
+          'x.......x.....x...x.x.x.x.x.x.x.x',
+          'x.xxxxx.x.xxxxx.x.x.x.x.xxx.x.x.x',
+          'x.x...x.x.....x.x.....x.....x...x',
+          'x.x.x.xxxxxxx.x.xxxxx.xxxxxxxxx.x',
+          'x.x.x.........x.x...x.x...x.....x',
+          'xxx.x.xxxxxxx.xxx.x.xxx.x.x.xxxxx',
+          'x...x.x...x...x...x.....x.x.....x',
+          'x.xxx.x.x.xxxxx.xxxxxxxxx.xxxxx.x',
+          'x.x...x.x.x.....x.....x...x...x.x',
+          'x.xxxxx.x.x.xxxxx.xxx.x.xxx.x.x.x',
+          'x.....x.x.x...x.....x.x...x.x...x',
+          'x.xxx.x.x.xxx.xxxxx.x.xxx.x.xxxxx',
+          'x.x.x...x...x...x...x.x...x.x...x',
+          'x.x.xxxxx.xxxxx.x.xxx.x.xxx.x.xxx',
+          'x.x...x...x...x...x.x.x.x...x...x',
+          'x.x.x.x.xxx.x.xxxxx.x.x.x.xxxxx.x',
+          'x...x.x.....x.........x.........x',
+          'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+]
 
 NORTH=0
 EAST=1
@@ -113,17 +140,17 @@ class Cell(object):
         self.point = point
 
     def pick_random(self):
-        candidates = [n in self.neighbors if n and not n.visited]
+        candidates = [n for n in self.neighbors if n and not n.visited]
         if not candidates:
             return None
         neighbor = random.choice(candidates)
 
         # Remove wall to neighbor, reciprically 
-        self.walls[self.neighbors.indexOf(neighbor)] = False 
-        neighbor.walls[neighbor.indexOf(self)] = False
+        self.walls[self.neighbors.index(neighbor)] = False 
+        neighbor.walls[neighbor.neighbors.index(self)] = False
 
         return neighbor
-        
+
     def __repr__(self):
         return unicode(self.point)
 
@@ -147,11 +174,18 @@ def generate_map(rows,cols):
                 cell.neighbors[SOUTH] = matrix[y+1][x]
 
     cell = matrix[0][0]
-    counter = 20
+    counter = 10000
+    stack = []
     while cell and counter:
         counter -= 1
         cell.visited = True
         cell = cell.pick_random()
+        if not cell:
+            if not stack:
+                break
+            cell = stack.pop()
+        else:
+            stack.append(cell)
 
     return matrix
 
@@ -191,33 +225,34 @@ def main():
         print ' .byte #%' + ''.join(row[24:32]) 
 
 if __name__ == "__main__":
-    #main()
-    m = generate_map(10,10)
-    for i, row in enumerate(m):
-        cols = []
-        for cell in row:
-            cols.append('*')
-            if cell.walls[NORTH]:
-                cols.append('*')
-            else:
-                cols.append(' ')
-        cols.append('*')
-        print ''.join(cols)
-        cols = []
-        for cell in row:
-            if cell.walls[WEST]:
-                cols.append('*')
-            else:
-                cols.append(' ')
-            if cell.visited:
-                cols.append(' ')
-            else:
-                cols.append('*')
-        cols.append('*')
-        print ''.join(cols)
-        cols = []
-    for cell in row:
-        cols.append('*')
-        cols.append('*')
-    cols.append('*')
-    print ''.join(cols)
+    main()
+    
+    # m = generate_map(12,16)
+    # for i, row in enumerate(m):
+    #     cols = []
+    #     for cell in row:
+    #         cols.append('x')
+    #         if cell.walls[NORTH]:
+    #             cols.append('x')
+    #         else:
+    #             cols.append('.')
+    #     cols.append('x')
+    #     print ''.join(cols)
+    #     cols = []
+    #     for cell in row:
+    #         if cell.walls[WEST]:
+    #             cols.append('x')
+    #         else:
+    #             cols.append('.')
+    #         if cell.visited:
+    #             cols.append('.')
+    #         else:
+    #             cols.append('x')
+    #     cols.append('x')
+    #     print ''.join(cols)
+    #     cols = []
+    # for cell in row:
+    #     cols.append('x')
+    #     cols.append('x')
+    # cols.append('x')
+    # print ''.join(cols)
