@@ -112,6 +112,18 @@ class Cell(object):
         self.visited = False
         self.point = point
 
+    def pick_random(self):
+        candidates = [n in self.neighbors if n and not n.visited]
+        if not candidates:
+            return None
+        neighbor = random.choice(candidates)
+
+        # Remove wall to neighbor, reciprically 
+        self.walls[self.neighbors.indexOf(neighbor)] = False 
+        neighbor.walls[neighbor.indexOf(self)] = False
+
+        return neighbor
+        
     def __repr__(self):
         return unicode(self.point)
 
@@ -135,25 +147,11 @@ def generate_map(rows,cols):
                 cell.neighbors[SOUTH] = matrix[y+1][x]
 
     cell = matrix[0][0]
-    while cell:
-        print cell
-        cell = cell.neighbors[SOUTH]
-    # cell = [10,10] # x,y
-    # matrix[cell[1]][cell[0]] >= False
-    # for i in range(0,30):
-    #     direction = pick_direction(cell,rows,cols)
-    #     if direction == NORTH:
-    #         cell[1]-=1
-    #         matrix[cell[1]][cell[0]] = False
-    #     elif direction == SOUTH:
-    #         cell[1]+=1
-    #         matrix[cell[1]][cell[0]] = False
-    #     elif direction == EAST:
-    #         cell[0]+=1
-    #         matrix[cell[1]][cell[0]] = False
-    #     elif direction == WEST:
-    #         cell[0]-=1
-    #         matrix[cell[1]][cell[0]] = False
+    counter = 20
+    while cell and counter:
+        counter -= 1
+        cell.visited = True
+        cell = cell.pick_random()
 
     return matrix
 
