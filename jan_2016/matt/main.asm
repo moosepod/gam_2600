@@ -83,7 +83,7 @@ UnderscanExtraLoop dex
         sta COLUPF
 
         ; Setup for start of kernel
-        lda #192 ; number of lines in main loop
+        lda #190 ; number of lines in main loop -- two extra lines at end
         sta CurrentLine
 ;;
 ;; 192 lines of frame total     
@@ -178,9 +178,6 @@ SecondPlayfield
 		; Calculate our y index for the next playfield
 		tya
 		bne Kernel ; the lsr should set the Z flag
-        sta WSYNC
-        sta WSYNC
-        sta WSYNC
 ;;      
 ;; 30 lines of overscan
 ;;
