@@ -178,7 +178,10 @@ SecondPlayfield
 		; Calculate our y index for the next playfield
 		tya
 		bne Kernel ; the lsr should set the Z flag
-;;
+        sta WSYNC
+        sta WSYNC
+        sta WSYNC
+;;      
 ;; 30 lines of overscan
 ;;
 		lda #0
@@ -283,55 +286,6 @@ CheckJoystick
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     align $100; make sure data doesn't cross page boundary
-
-Player_Sprite_Data
-        .byte #%00011000;$0C
-        .byte #%00011000;$0C
-        .byte #%00011100;$0C
-        .byte #%00011100;$0C
-        .byte #%00011110;$0C
-        .byte #%00011110;$0C
-        .byte #%00010000;$0C
-        .byte #%00010000;$0C
-        .byte #%00010000;$0C
-        .byte #%00010000;$0C
-        .byte #%01111110;$F4
-        .byte #%01111110;$F4
-        .byte #%01111110;$F4
-        .byte #%01111110;$F4
-        .byte #%00111100;$F4
-        .byte #%00111100;$F4
-        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
-        .byte #%00000000 ; buffer line that clears sprite on last line
-        .byte #%00000000 ; blank line to offset sprite (we never reach 0)
-        .byte #%00000000 ; buffer line that clears sprite on last line
-;---End Graphics Data---
-
-;---Color Data from PlayerPal 2600---
-
-; color lines are doubled up to account for our two line kernel.
-PLAYER_COLOR_DATA
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$0C;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-        .byte #$F4;
-;---End Color Data---
 
 ; To make timing work, left/right side of screen is alway a wall.
 PFData0
