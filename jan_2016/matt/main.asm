@@ -16,7 +16,7 @@
         org $80
 
 PLAYER_START_X  equ #$15
-PLAYER_START_Y  equ #$BC ; needs to be even
+PLAYER_START_Y  equ #$AC ; needs to be even
 
 CurrentLine             .byte
 Player_X                .byte ; X position of ball sprint
@@ -24,9 +24,9 @@ Player_Y                .byte ; Y position of player sprite.
 Player_X_Tmp            .byte 
 Player_Y_Tmp            .byte 
 
-BORDER_COLOR equ #$EE 
+BORDER_COLOR equ #$A8 
 BACKGROUND_COLOR equ #$76
-PLAYER_COLOR equ #$14
+PLAYER_COLOR equ #$DE
 MAX_Y equ #173
 MIN_Y equ #0
 
@@ -72,6 +72,12 @@ NextFrame
         lda #00
         sta GRP0
 
+        ; Clear playfield
+        lda #$00
+        sta PF0
+        sta PF1
+        sta PF2
+
         jsr PositionPlayerX ; 2 scanlines
     
 		ldx #32
@@ -83,11 +89,9 @@ UnderscanExtraLoop dex
         sta COLUPF
 
         ; Setup for start of kernel
-        lda #190 ; number of lines in main loop -- two extra lines at end
+        lda #190 ; number of lines in main loop - buffer at top - 2 line buffer
         sta CurrentLine
-;;
-;; 192 lines of frame total     
-;;
+
 		; We store the current line (0 being the bottom of the screen)
 Kernel
 		;; We have a two line kernel. First line sets the playfield,
@@ -283,58 +287,3 @@ CheckJoystick
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     align $100; make sure data doesn't cross page boundary
-
-; To make timing work, left/right side of screen is alway a wall.
-PFData0
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
-
-PFData3
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000
- .byte #%11110000

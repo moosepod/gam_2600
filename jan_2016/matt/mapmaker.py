@@ -199,11 +199,13 @@ def parse_map_data(data):
         row.extend(reversed(list(cells[8:16])))
         row.extend(cells[16:24])
         row.extend(reversed(list(cells[24:32])))
+    rows.append('00000000000000000000000000000000')
+    rows.append('00000000000000000000000000000000')
     return rows
 
 def generate_map_data():
-    data = []
-    m = generate_map_cells(12,16)
+    data = ['xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx']
+    m = generate_map_cells(10,16)
     for i, row in enumerate(m):
         cols = []
         for cell in row:
