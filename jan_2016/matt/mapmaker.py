@@ -199,8 +199,7 @@ def parse_map_data(data):
         row.extend(reversed(list(cells[8:16])))
         row.extend(cells[16:24])
         row.extend(reversed(list(cells[24:32])))
-    rows.append('00000000000000000000000000000000')
-    rows.append('00000000000000000000000000000000')
+    rows.append('11111111111111111111111111111111')
     return rows
 
 def generate_map_data():
