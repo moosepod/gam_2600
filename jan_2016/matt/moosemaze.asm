@@ -165,16 +165,15 @@ Kernel
 		nop
 		nop
 		nop
-		nop
 
         ; Immediately switch to second playfield
-        lda PFData5,y
+        lda (PF5_Pointer),y
         sta PF2
-        lda PFData4,y
+        lda (PF4_Pointer),y
         sta PF1
 
        	; And back       
-        lda PFData2,y
+        lda (PF2_Pointer),y
         sta PF2
         lda (PF1_Pointer),y
         sta PF1
@@ -209,12 +208,11 @@ SecondPlayfield
 		nop
 		nop
 		nop
-        nop
 
 		; Switch to second playfield
-        lda PFData5,y
+        lda (PF5_Pointer),y
         sta PF2
-        lda PFData4,y
+        lda (PF4_Pointer),y
         sta PF1
 
 		ldy CurrentLine	
@@ -235,7 +233,7 @@ SecondPlayfield
         sta PF0
         sta PF1
         sta PF2
-        ldx #$8
+        ldx #$9
 EndLoop
         dex
         sta WSYNC
@@ -350,99 +348,99 @@ PFData1
  .byte #%11111111
  .byte #%11111111
  .byte #%10000010
+ .byte #%10101010
+ .byte #%10101000
+ .byte #%10101011
+ .byte #%10101010
+ .byte #%10101010
+ .byte #%10101010
  .byte #%11101010
  .byte #%10001010
- .byte #%10111010
- .byte #%10100010
- .byte #%10101011
- .byte #%10101000
- .byte #%10111011
- .byte #%10001010
- .byte #%10101110
- .byte #%10101000
- .byte #%10101011
- .byte #%10101000
- .byte #%11101111
- .byte #%10000000
  .byte #%10111111
  .byte #%10000000
- .byte #%11111111
- .byte #%10000000
+ .byte #%10111110
+ .byte #%10000010
+ .byte #%11111110
+ .byte #%10000010
+ .byte #%10111011
+ .byte #%10001000
+ .byte #%11101110
+ .byte #%10001000
  .byte #%11111111
  .byte #%11111111
 
 PFData2
  .byte #%11111111
  .byte #%11111111
- .byte #%00010000
- .byte #%01010111
- .byte #%01000101
- .byte #%11111101
  .byte #%00000100
- .byte #%11011101
- .byte #%01000101
- .byte #%11110101
- .byte #%00000100
+ .byte #%01110101
+ .byte #%00010001
  .byte #%01111111
- .byte #%01000001
- .byte #%11010111
- .byte #%01010000
- .byte #%01011111
- .byte #%00010000
- .byte #%11011111
  .byte #%01000000
+ .byte #%11011111
+ .byte #%00010001
+ .byte #%01110111
+ .byte #%01010000
+ .byte #%11010111
+ .byte #%00000100
  .byte #%01111111
- .byte #%00000000
+ .byte #%01000100
+ .byte #%01010101
+ .byte #%00010001
+ .byte #%11111111
+ .byte #%00000001
+ .byte #%01111101
+ .byte #%00000100
  .byte #%11111111
  .byte #%11111111
 
 PFData5
  .byte #%11111111
  .byte #%11111111
- .byte #%00001000
- .byte #%11111010
- .byte #%00000010
- .byte #%11111110
- .byte #%00000010
- .byte #%10111110
- .byte #%00100010
- .byte #%11101010
- .byte #%00001010
- .byte #%11111010
- .byte #%00001010
- .byte #%11111010
- .byte #%00001010
- .byte #%11101010
  .byte #%10000010
- .byte #%11111111
- .byte #%00000000
- .byte #%11111111
- .byte #%10000000
+ .byte #%10111010
+ .byte #%10101000
+ .byte #%10101111
+ .byte #%10100000
+ .byte #%10101111
+ .byte #%10101000
+ .byte #%10101010
+ .byte #%00001010
+ .byte #%11111011
+ .byte #%10001000
+ .byte #%10101111
+ .byte #%10100000
+ .byte #%10111110
+ .byte #%10000010
+ .byte #%10111010
+ .byte #%10001010
+ .byte #%11111011
+ .byte #%00000010
  .byte #%11111111
  .byte #%11111111
 
 PFData4
  .byte #%11111111
  .byte #%11111111
- .byte #%00010000
- .byte #%01110111
- .byte #%00000101
- .byte #%01111101
- .byte #%01000001
- .byte #%01111101
- .byte #%01000001
- .byte #%01011111
- .byte #%01000001
- .byte #%01111101
- .byte #%00000001
- .byte #%11111101
+ .byte #%00000100
+ .byte #%11010101
  .byte #%00010001
- .byte #%01010111
- .byte #%01010100
- .byte #%01110101
- .byte #%00010100
- .byte #%01010111
+ .byte #%01111111
  .byte #%01000000
+ .byte #%01110111
+ .byte #%00010100
+ .byte #%11010111
+ .byte #%00010000
+ .byte #%01011111
+ .byte #%01010001
+ .byte #%01110101
+ .byte #%01000101
+ .byte #%01011101
+ .byte #%00010001
+ .byte #%01110111
+ .byte #%01010000
+ .byte #%01011111
+ .byte #%00000000
  .byte #%11111111
  .byte #%11111111
 

@@ -165,16 +165,15 @@ Kernel
 		nop
 		nop
 		nop
-		nop
 
         ; Immediately switch to second playfield
-        lda PFData5,y
+        lda (PF5_Pointer),y
         sta PF2
-        lda PFData4,y
+        lda (PF4_Pointer),y
         sta PF1
 
        	; And back       
-        lda PFData2,y
+        lda (PF2_Pointer),y
         sta PF2
         lda (PF1_Pointer),y
         sta PF1
@@ -209,12 +208,11 @@ SecondPlayfield
 		nop
 		nop
 		nop
-        nop
 
 		; Switch to second playfield
-        lda PFData5,y
+        lda (PF5_Pointer),y
         sta PF2
-        lda PFData4,y
+        lda (PF4_Pointer),y
         sta PF1
 
 		ldy CurrentLine	
@@ -235,7 +233,7 @@ SecondPlayfield
         sta PF0
         sta PF1
         sta PF2
-        ldx #$8
+        ldx #$9
 EndLoop
         dex
         sta WSYNC
