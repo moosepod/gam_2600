@@ -24,6 +24,12 @@ Player_Y                .byte ; Y position of player sprite.
 Player_X_Tmp            .byte 
 Player_Y_Tmp            .byte 
 
+; Pointers for current playfields
+PF1_Pointer             .word
+PF2_Pointer             .word
+PF4_Pointer             .word
+PF5_Pointer             .word
+
 BORDER_COLOR equ #$A8 
 BACKGROUND_COLOR equ #$76
 PLAYER_COLOR equ #$DE
@@ -85,6 +91,27 @@ NextFrame
         sta PF1
         sta PF2
 
+        ; Setup current map
+        lda #<PFData1
+        sta PF1_Pointer ; store lo byte
+        lda #>PFData1
+        sta PF1_Pointer+1 ; store hi byte
+
+        lda #<PFData2
+        sta PF2_Pointer ; store lo byte
+        lda #>PFData2
+        sta PF2_Pointer+1 ; store hi byte
+
+        lda #<PFData4
+        sta PF4_Pointer ; store lo byte
+        lda #>PFData4
+        sta PF4_Pointer+1 ; store hi byte
+
+        lda #<PFData5
+        sta PF5_Pointer ; store lo byte
+        lda #>PFData5
+        sta PF5_Pointer+1 ; store hi byte
+
         jsr PositionPlayerX ; 2 scanlines
     
 		ldx #32
@@ -127,12 +154,11 @@ Kernel
 		; Draw playfield        
         lda #$C0
         sta PF0
-        lda PFData1,y
+        lda (PF1_Pointer),y
         sta PF1
-        lda PFData2,y
+        lda (PF2_Pointer),y
         sta PF2
 
-		nop
 		nop
 		nop
 		nop
@@ -150,7 +176,7 @@ Kernel
        	; And back       
         lda PFData2,y
         sta PF2
-        lda PFData1,y
+        lda (PF1_Pointer),y
         sta PF1
 
 		sta WSYNC

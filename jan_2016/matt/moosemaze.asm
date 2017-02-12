@@ -24,6 +24,12 @@ Player_Y                .byte ; Y position of player sprite.
 Player_X_Tmp            .byte 
 Player_Y_Tmp            .byte 
 
+; Pointers for current playfields
+PF1_Pointer             .word
+PF2_Pointer             .word
+PF4_Pointer             .word
+PF5_Pointer             .word
+
 BORDER_COLOR equ #$A8 
 BACKGROUND_COLOR equ #$76
 PLAYER_COLOR equ #$DE
@@ -85,6 +91,27 @@ NextFrame
         sta PF1
         sta PF2
 
+        ; Setup current map
+        lda #<PFData1
+        sta PF1_Pointer ; store lo byte
+        lda #>PFData1
+        sta PF1_Pointer+1 ; store hi byte
+
+        lda #<PFData2
+        sta PF2_Pointer ; store lo byte
+        lda #>PFData2
+        sta PF2_Pointer+1 ; store hi byte
+
+        lda #<PFData4
+        sta PF4_Pointer ; store lo byte
+        lda #>PFData4
+        sta PF4_Pointer+1 ; store hi byte
+
+        lda #<PFData5
+        sta PF5_Pointer ; store lo byte
+        lda #>PFData5
+        sta PF5_Pointer+1 ; store hi byte
+
         jsr PositionPlayerX ; 2 scanlines
     
 		ldx #32
@@ -127,12 +154,11 @@ Kernel
 		; Draw playfield        
         lda #$C0
         sta PF0
-        lda PFData1,y
+        lda (PF1_Pointer),y
         sta PF1
-        lda PFData2,y
+        lda (PF2_Pointer),y
         sta PF2
 
-		nop
 		nop
 		nop
 		nop
@@ -150,7 +176,7 @@ Kernel
        	; And back       
         lda PFData2,y
         sta PF2
-        lda PFData1,y
+        lda (PF1_Pointer),y
         sta PF1
 
 		sta WSYNC
@@ -323,24 +349,24 @@ CheckJoystick
 PFData1
  .byte #%11111111
  .byte #%11111111
- .byte #%10000000
+ .byte #%10000010
+ .byte #%11101010
+ .byte #%10001010
  .byte #%10111010
  .byte #%10100010
- .byte #%10101110
- .byte #%10101000
- .byte #%11101011
- .byte #%10001000
- .byte #%10111110
- .byte #%10100010
- .byte #%10101010
- .byte #%10101010
  .byte #%10101011
  .byte #%10101000
- .byte #%10111010
+ .byte #%10111011
  .byte #%10001010
- .byte #%10101111
- .byte #%10100000
- .byte #%11111110
+ .byte #%10101110
+ .byte #%10101000
+ .byte #%10101011
+ .byte #%10101000
+ .byte #%11101111
+ .byte #%10000000
+ .byte #%10111111
+ .byte #%10000000
+ .byte #%11111111
  .byte #%10000000
  .byte #%11111111
  .byte #%11111111
@@ -348,75 +374,75 @@ PFData1
 PFData2
  .byte #%11111111
  .byte #%11111111
- .byte #%00000001
- .byte #%11011101
- .byte #%01010101
- .byte #%01010101
- .byte #%01010101
- .byte #%11010101
- .byte #%00010001
- .byte #%01111101
- .byte #%00000101
- .byte #%11110111
- .byte #%00010100
- .byte #%11010101
- .byte #%00010001
- .byte #%01111111
+ .byte #%00010000
+ .byte #%01010111
+ .byte #%01000101
+ .byte #%11111101
  .byte #%00000100
- .byte #%11010101
- .byte #%00010101
+ .byte #%11011101
+ .byte #%01000101
  .byte #%11110101
- .byte #%00000001
+ .byte #%00000100
+ .byte #%01111111
+ .byte #%01000001
+ .byte #%11010111
+ .byte #%01010000
+ .byte #%01011111
+ .byte #%00010000
+ .byte #%11011111
+ .byte #%01000000
+ .byte #%01111111
+ .byte #%00000000
  .byte #%11111111
  .byte #%11111111
 
 PFData5
  .byte #%11111111
  .byte #%11111111
- .byte #%00000010
- .byte #%11111011
- .byte #%00100010
- .byte #%10101110
- .byte #%10100000
- .byte #%10111111
- .byte #%10100000
- .byte #%10101111
- .byte #%10100000
- .byte #%10111110
  .byte #%00001000
- .byte #%11111011
- .byte #%10000010
- .byte #%10111111
- .byte #%10000000
- .byte #%11111111
- .byte #%00000000
+ .byte #%11111010
+ .byte #%00000010
  .byte #%11111110
  .byte #%00000010
+ .byte #%10111110
+ .byte #%00100010
+ .byte #%11101010
+ .byte #%00001010
+ .byte #%11111010
+ .byte #%00001010
+ .byte #%11111010
+ .byte #%00001010
+ .byte #%11101010
+ .byte #%10000010
+ .byte #%11111111
+ .byte #%00000000
+ .byte #%11111111
+ .byte #%10000000
  .byte #%11111111
  .byte #%11111111
 
 PFData4
  .byte #%11111111
  .byte #%11111111
- .byte #%00000000
+ .byte #%00010000
  .byte #%01110111
- .byte #%01000100
- .byte #%11011101
- .byte #%00010001
- .byte #%01110111
- .byte #%00000100
+ .byte #%00000101
  .byte #%01111101
  .byte #%01000001
- .byte #%01110111
- .byte #%01000101
- .byte #%01011101
- .byte #%00010000
- .byte #%11110111
- .byte #%00010000
+ .byte #%01111101
+ .byte #%01000001
+ .byte #%01011111
+ .byte #%01000001
+ .byte #%01111101
+ .byte #%00000001
+ .byte #%11111101
+ .byte #%00010001
  .byte #%01010111
- .byte #%01000100
- .byte #%01111111
- .byte #%00000000
+ .byte #%01010100
+ .byte #%01110101
+ .byte #%00010100
+ .byte #%01010111
+ .byte #%01000000
  .byte #%11111111
  .byte #%11111111
 

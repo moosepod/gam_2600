@@ -62,3 +62,4 @@ GOAL: make map generator using make
 - i'm at 262 scanlines, why rolling?
 - see http://www.biglist.com/lists/stella/archives/200503/msg00085.html
 - So -- added vblank reset before main loop, and made sure it ended at 259 (so 260-262 are the vsync/underscan) and it worked!
+- Try multiple maps?
