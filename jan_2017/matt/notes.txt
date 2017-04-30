@@ -1,0 +1,66 @@
+1/8/2017
+- Had a subroutine written that took in both a player position and a pointer to sprite data, but this ended up taking too many clock cycles to draw the wall and the player, so refactored it into dedicated drawing subroutines. I guess I could skip the jsr/rts if i really needed the cycles.
+- Tried doing async playfields -- problem is then you have to swap the playfield on _both_ scan lines of the kernel, or you're going to be drawing the second half of the playfield on the first half of line two. THis removes any additional cycles you get by usign a two line kernel. 
+
+1/12/2017
+- Trying to fiddle with horizontal position of wall 
+- Experimented  with just single X set for wall.
+
+1/14/2017
+- I think i can get the X for the walls on scan line 1 if i add an offset adjustment. 	
+- Too many cycles elapsed.
+- Ahaha -- what if we used all the spare vsync cycles to calculate the various X offsets for the walls? But then we still have to find the coarse position...
+- Do i have time to change one of the pfs and then back again? Time it out with some nops.
+- Success!
+- What causes the weird anonmaly across the X axis?
+- I changed the ordering and it changed the anomaly to a "warp".
+- cart doesn't run on harmony. maybe need to add .4k as suffix?
+
+GOAL: make map generator using make
+- Have map file
+- Make compiles this file
+- Make merges this file
+
+- Make done!
+
+1/15/2017
+- Decided to start from scratch and get map part done first
+- width/height of 8 (using shift)
+- try to get whole playfield shifted
+- Mostly working. Need to figure out why (a) top is extended (b) anomaly in center (c) anomaly at end. Compare with un-reset version to see what is expected.
+
+1/16/2017 
+- Got everything but last 4 bits in second playfield pixels or so working. Just make those ones the same?
+- OK -- if I switch to flipped playfield and make the PF0 border only, i have the extra cycles needed to fit in the map.
+
+2/7/2017
+- Ok am back!
+- Generate map from PF1,PF2,PF3,PF4 meaning 32 wide, 24 high
+- Added a spiral maze
+- Working on adding in single-line sprite with vert/hozizontal movement
+- Note to self -- use CMP not SUB...lol.
+- And that's it -- one line sprite, and a maze, and movement, and collision!
+
+2/8/2017
+- Work on auto maze generation
+
+2/10/2017
+- Added some background colors
+- Renamed to MooseMaze
+- You try to get to the end of the maze
+- Each build generates a new maze
+- That's it. Time for something new.
+- Fixed scanline count
+- need to move header down.
+- duh -- target scanline at end is 259, not 262 -- because first 3 are counted below zero!
+- Leave space at bottom for timer or something
+- Add end target
+- Fix "bounce"
+- Priority: fix looping
+
+2/11/2017
+- i'm at 262 scanlines, why rolling?
+- see http://www.biglist.com/lists/stella/archives/200503/msg00085.html
+- So -- added vblank reset before main loop, and made sure it ended at 259 (so 260-262 are the vsync/underscan) and it worked!
+- Try multiple maps, toggled with game selector?
+- Game is in theme of "classic atari game" so makes some sense.

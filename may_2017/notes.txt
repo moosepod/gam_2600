@@ -1,0 +1,3 @@
+4/30/2017
+- Setup may_2016 as moosewar
+- Installed https://marketplace.visualstudio.com/items?itemName=zehfernando.vscode-dasm
