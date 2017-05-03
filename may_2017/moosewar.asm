@@ -1,6 +1,7 @@
         processor 6502
         include "vcs.h"
         include "macro.h"
+        include "xmacro.h"
 
 ;;;;; All of the following were helpful in building this game:
 ;;;;; An Atari 2600 game! See http://8bitworkshop.com/
@@ -33,45 +34,34 @@ Start
         CLEAN_START
 
 NextFrame
-; Initialization -- turn on vblank, set VSYNC for 3 scan lines, turn off VSYNC
-	lda #2
-    sta VBLANK
-	lda #2
-	sta VSYNC
-	sta WSYNC
-	sta WSYNC
-	sta WSYNC
-	lda #0
-	sta VSYNC
+	VERTICAL_SYNC
 
 ; 37 lines BLANK
-	ldx #37
-BlankLoop	sta WSYNC	
-	dex		
-	bne BlankLoop	
+	TIMER_SETUP 37
 
-; Re-enable output (disable VBLANK)
-	lda #0
-    sta VBLANK
+	; clear
+	lda 0
+	sta COLUBK	
+	sta WSYNC
+
+    TIMER_WAIT	
 
 ; 192 scanlines 
-	ldx #192
+	TIMER_SETUP 192
 	lda BGColor
-ScanLoop
 	sta COLUBK	
 	sta WSYNC	
-	dex
-	bne ScanLoop
+    TIMER_WAIT	
 
-; Enable VBLANK again
-	lda #2
-    sta VBLANK
 ; 30 lines overscan
-	ldx #30
-OverscanLoop	sta WSYNC
-	dex
-	bne OverscanLoop
+	TIMER_SETUP 30
 
+	; clear
+	lda 0
+	sta COLUBK	
+	sta WSYNC
+
+    TIMER_WAIT	
 
 ; Frame is over, start next one
 	jmp NextFrame

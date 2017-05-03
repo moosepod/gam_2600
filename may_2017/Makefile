@@ -5,4 +5,4 @@ PYTHON_BIN_PATH=/usr/bin/python
 ROM_NAME=moosewar.bin
 
 moosewar: 
-	$(DASM_BIN_PATH) moosewar.asm -s$(ROM_PATH)/moosewar.sym -l$(ROM_PATH)/moosewar.lst -I$(DASM_INCLUDE_PATH) -I. -f3 -v5 -o$(ROM_PATH)/$(ROM_NAME)
+	$(DASM_BIN_PATH) moosewar.asm -s$(ROM_PATH)/moosewar.sym -l$(ROM_PATH)/moosewar.lst -I$(DASM_INCLUDE_PATH) -I. -f3 -v5 -o$(ROM_PATH)/$(ROM_NAME) -DNO_ILLEGAL_OPCODES=1

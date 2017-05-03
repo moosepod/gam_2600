@@ -1,3 +1,8 @@
 4/30/2017
 - Setup may_2016 as moosewar
 - Installed https://marketplace.visualstudio.com/items?itemName=zehfernando.vscode-dasm
+- Basic setup:
+  - Add score at top
+  - Draw cards in middle
+  - Draw cards on sides X O O X
+  - Shuffe and deal carss
