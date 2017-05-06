@@ -32,3 +32,7 @@ TODO:
 
  - Sounds (winner tune, sound on each draw, "shuffle" sound)
 
+5/6/2017
+
+- Added states
+- BUG: extra line at bottom drawn for start state
