@@ -6,3 +6,29 @@
   - Draw cards in middle
   - Draw cards on sides X O O X
   - Shuffe and deal carss
+
+5/5/2017
+- Got basic cards setup in place!
+TODO:
+ - draw P2 sprites, lower down
+ - Complete rest of suit sprites
+ - Complete rest of card sprites
+ - Use index to draw actual selected card (stored in variable)
+
+ - Create "deck" of cards (unshuffled) and turns into two hands of cards
+ - Button shows next card until end of game
+ 
+ - End of game show message
+
+ - Score each comparison (no war)
+ = Show winner
+
+ - Support war (ties)
+
+ - have launch screen (decks as is, WAR at bottom of screen)
+
+ - Fine positioning for card suites. Can we use positioning to draw sprites twice per line?
+ - Fix color on sprites
+
+ - Sounds (winner tune, sound on each draw, "shuffle" sound)
+

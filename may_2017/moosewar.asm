@@ -22,8 +22,18 @@
 
 Score0	byte	; BCD score of player 0
 Score1	byte	; BCD score of player 1
+
 FontBuf	ds 10	; 2x5 array of playfield bytes
+
+; high nibble is suit (0 diamond 1 spade 2 clubs 3 hearts)
+; low nibble is card number 
+Card0   byte    ; face-up card of player 0
+Card1   byte    ; face-up card of player 1
+
 Temp	byte
+
+CardSpriteH equ 7 ; horizontal position of card sprite
+SuitSpriteH equ 8 ; horizontal position of suit sprite
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -41,6 +51,11 @@ Start
 	sta Score0
 	lda #$00
 	sta Score1
+
+	lda #$09
+	sta Card0
+	lda #$01
+	sta Card1
 	
 NextFrame
 	VERTICAL_SYNC
@@ -55,11 +70,27 @@ NextFrame
     ldx #5
 	jsr GetBCDBitmap
 
+	; Move player1 sprite to correct location to draw suit
+	ldx #SuitSpriteH
+	sta WSYNC
+Sprite1Loop
+	dex
+	bne Sprite1Loop
+	sta RESP0
+
+	; Move player2 sprite to correct location to draw card
+	ldx #CardSpriteH
+	sta WSYNC
+Sprite2Loop
+	dex
+	bne Sprite2Loop
+	sta RESP1
+
 ;;; 192 lines total. First 40 are scoreboard
     TIMER_WAIT	
 	TIMER_SETUP 50
 
-; First, we'll draw the scoreboard.
+;;; SCOREBOARD
 ; Put the playfield into score mode (bit 2) which gives
 ; two different colors for the left/right side of
 ; the playfield (given by COLUP0 and COLUP1).
@@ -69,6 +100,7 @@ NextFrame
 	sta COLUP0	; set color for left
 	lda #$a8
 	sta COLUP1	; set color for right
+
 ; Now we draw all four digits.
 	ldy #0		; Y will contain the frame Y coordinate
 ScanLoop1a
@@ -85,14 +117,14 @@ ScanLoop1a
 	cpy #10
 	bcc ScanLoop1a
 
-; Clear the playfield
+;;;; Clear the playfield
 	lda #0
 	sta WSYNC
 	sta PF1
 
     TIMER_WAIT	
 
-; Draw the card decks. 
+;;;;; Draw the card decks. 
 
 	lda #%00000011	; score mode + reflect playfield
 	sta CTRLPF
@@ -114,10 +146,25 @@ ScanLoop1a
     TIMER_WAIT
 
 	; middle of cards
-	TIMER_SETUP 80
+	TIMER_SETUP 20
 
 	lda PFDataFlippedMiddle2
 	sta PF2
+
+    TIMER_WAIT
+
+	TIMER_SETUP 60
+
+	; Draw the sprite for the card suit and card number
+	ldy #8	
+SpriteLoop 
+	sta WSYNC
+	lda SuitSprites,y
+	sta GRP0
+	lda CardSprites,y
+	sta GRP1
+	dey
+	bpl SpriteLoop
 
     TIMER_WAIT
 
@@ -284,6 +331,34 @@ DigitsBitmap
 	.byte $EE ; |XXX XXX | 
 	.byte $22 ; |  X   X | 
 	.byte $EE ; |XXX XXX | 	
+
+;---Graphics Data from PlayerPal 2600---
+
+SuitSprites
+        .byte #%00000000;--
+        .byte #%00000000;--
+        .byte #%00001000;--
+        .byte #%00011100;--
+        .byte #%00111110;--
+        .byte #%00011100;--
+        .byte #%00001000;--
+        .byte #%00000000;--
+        .byte #%00000000;--
+
+
+CardSprites
+        .byte #%00000000;--
+        .byte #%01000010;--
+        .byte #%01000010;--
+        .byte #%01111110;--
+        .byte #%01000010;--
+        .byte #%01000010;--
+        .byte #%01000010;--
+        .byte #%00100100;--
+        .byte #%00011000;--
+        .byte #%00000000;--
+;---End Graphics Data---
+
 
 ; Epilogue
 	org $fffc
