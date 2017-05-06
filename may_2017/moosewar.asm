@@ -210,14 +210,14 @@ PlayingStateKernel
     TIMER_WAIT
 
 	; middle of cards
-	TIMER_SETUP 20
+	TIMER_SETUP 5
 
 	lda PFDataFlippedMiddle2
 	sta PF2
 
     TIMER_WAIT
 
-	TIMER_SETUP 20
+	TIMER_SETUP 35
 
 	; Draw the sprite for the card suit and card number for P1
 	ldy #8	
@@ -264,6 +264,13 @@ Sprite2Loop2
 	sta HMP0
 	sta HMP1
 	sta HMOVE
+
+	; space P2 sprites farther down
+	ldx 24
+SpaceLoop
+	dex
+	sta WSYNC
+	bne SpaceLoop
 
 	; now draw the sprites
 	ldy #8	
