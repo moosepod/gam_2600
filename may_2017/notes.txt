@@ -9,6 +9,15 @@
 
 5/5/2017
 - Got basic cards setup in place!
+
+
+5/6/2017
+
+- Added states
+- Tested using spacing for NUSIZ0/NUSIZ1 but wide was too wide and narrow too narrow
+
+***
+
 TODO:
  - draw P2 sprites, lower down
  - Complete rest of suit sprites
@@ -31,8 +40,5 @@ TODO:
  - Fix color on sprites
 
  - Sounds (winner tune, sound on each draw, "shuffle" sound)
-
-5/6/2017
-
-- Added states
-- BUG: extra line at bottom drawn for start state
+ - Shuffle/deal animation?
+ - BUG: extra line at bottom drawn for start state

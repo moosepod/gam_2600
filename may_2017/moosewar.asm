@@ -57,6 +57,8 @@ Start
 	lda #STATE_START
 	sta GameState
 
+	jsr StartGame ; FOR TESTINGS
+
 	lda #$00
 	sta Score0
 	lda #$00
@@ -215,20 +217,66 @@ PlayingStateKernel
 
     TIMER_WAIT
 
-	TIMER_SETUP 60
+	TIMER_SETUP 20
 
-	; Draw the sprite for the card suit and card number
+	; Draw the sprite for the card suit and card number for P1
 	ldy #8	
-SpriteLoop 
+SpriteLoopP1 
 	sta WSYNC
 	lda SuitSprites,y
 	sta GRP0
 	lda CardSprites,y
 	sta GRP1
 	dey
-	bpl SpriteLoop
+	bpl SpriteLoopP1
 
     TIMER_WAIT
+
+	TIMER_SETUP 40
+
+	; Draw the sprite for the card suit and card number for P2. First we need to shift
+	; the sprite positions over to the right
+
+	; Move player1 sprite to correct location to draw suit
+	ldx #SuitSpriteH
+	inx
+	inx
+	inx
+	sta WSYNC
+Sprite1Loop2
+	dex
+	bne Sprite1Loop2
+	sta RESP0
+
+	; Move player2 sprite to correct location to draw card
+	ldx #CardSpriteH
+	inx
+	inx
+	inx
+	sta WSYNC
+Sprite2Loop2
+	dex
+	bne Sprite2Loop2
+	sta RESP1
+
+	; Assign fine adjustment (arrived at by trial and error)
+	lda #$50
+	sta HMP0
+	sta HMP1
+	sta HMOVE
+
+	; now draw the sprites
+	ldy #8	
+SpriteLoopP2
+	sta WSYNC
+	lda SuitSprites,y
+	sta GRP0
+	lda CardSprites,y
+	sta GRP1
+	dey
+	bpl SpriteLoopP2
+
+	TIMER_WAIT
 
 	; bottom of cards
 	TIMER_SETUP 10
