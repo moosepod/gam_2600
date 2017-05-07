@@ -15,3 +15,20 @@ Random 2600 game ideas
  - Pick a (premade) deck
  - Get a subdeck drawn every game
  - Play against computer (AI will suck)
+
+---------
+
+Concept -- rebuild MooseWAR (after defining core gameplay) in a number of systems
+
+- 2600
+- NES
+- PICO 8
+- Pygame
+- iphone (swift)
+- macos 
+- windows
+
+- Rust?
+- C/C++?
+- Unity
+- Apple 2

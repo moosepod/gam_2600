@@ -143,7 +143,7 @@ StartGame subroutine
 	sta Score1
 
 	; Initialize cards
-	lda #$09
+	lda #$19
 	sta Card0
 	lda #$21
 	sta Card1
@@ -221,24 +221,16 @@ PlayingStateKernel
 
 	TIMER_SETUP 35
 
-	; Calculate number of adds needed. there mus be a cleaner way to do this.
+	; Pull suit number (0-3) from high nibble and convert to offset into sprite
+	; table using a lookup table
 	lda Card0
 	and #$F0 ; take high nibble
 	lsr ; move to low nibble
 	lsr ; move to low nibble
 	lsr ; move to low nibble
 	lsr ; move to low nibble
-	tax
-	lda #0
-	dex
-	bmi CardDone ; if value is 0 
-	adc #8
-	dex
-	bmi CardDone ; if value is 1
-	adc #8
-	dex
-	bmi CardDone ; if value is 2
-	adc #8        ; value is 3
+	tay
+	lda SuitSpritesIndex,y
 
 CardDone
 	; Calculate sprite address for suit for P1, with offset from calcuation above. 
@@ -519,6 +511,14 @@ DigitsBitmap
 	.byte $EE ; |XXX XXX | 	
 
 ;---Graphics Data from PlayerPal 2600---
+
+SuitSpritesIndex
+	; not efficient use of space, but easy way to calculate the offset
+	; into SuitSprites needed for each suit
+	.byte #$0
+	.byte #$8
+	.byte #$10
+	.byte #$18
 
 SuitSprites
         .byte #%00000000;-- diamond
