@@ -36,6 +36,8 @@ FontBuf	ds 10	; 2x5 array of playfield bytes
 Card0   byte    ; face-up card of player 0
 Card1   byte    ; face-up card of player 1
 
+SuitSpritePtr .word   ; Will store pointer to card suit sprite
+
 Temp	byte
 
 CardSpriteH equ 7 ; horizontal position of card sprite
@@ -143,7 +145,7 @@ StartGame subroutine
 	; Initialize cards
 	lda #$09
 	sta Card0
-	lda #$01
+	lda #$21
 	sta Card1
 	
 	rts
@@ -219,17 +221,52 @@ PlayingStateKernel
 
 	TIMER_SETUP 35
 
+	; Calculate number of adds needed. there mus be a cleaner way to do this.
+	lda Card0
+	and #$F0 ; take high nibble
+	lsr ; move to low nibble
+	lsr ; move to low nibble
+	lsr ; move to low nibble
+	lsr ; move to low nibble
+	tax
+	lda #0
+	dex
+	bmi CardDone ; if value is 0 
+	adc #8
+	dex
+	bmi CardDone ; if value is 1
+	adc #8
+	dex
+	bmi CardDone ; if value is 2
+	adc #8        ; value is 3
+
+CardDone
+	; Calculate sprite address for suit for P1, with offset from calcuation above. 
+	; Offset in A
+	; remember low byte of address is in left hand side of item, not right
+
+	clc
+	adc #<SuitSprites
+	sta SuitSpritePtr
+
+	lda #>SuitSprites
+	adc #0 ; high byte will be 0 but we still need the carry
+	sta SuitSpritePtr+1
+
 	; Draw the sprite for the card suit and card number for P1
-	ldy #8	
+	ldy #7
 SpriteLoopP1 
 	sta WSYNC
-	lda SuitSprites,y
+	lda (SuitSpritePtr),y
 	sta GRP0
-	lda CardSprites,y
-	sta GRP1
+;	lda (SuitSpritePtr),y
+;	sta GRP1
 	dey
 	bpl SpriteLoopP1
 
+	sta WSYNC
+	lda #0
+	sta GRP0
     TIMER_WAIT
 
 	TIMER_SETUP 40
@@ -484,8 +521,7 @@ DigitsBitmap
 ;---Graphics Data from PlayerPal 2600---
 
 SuitSprites
-        .byte #%00000000;--
-        .byte #%00000000;--
+        .byte #%00000000;-- diamond
         .byte #%00001000;--
         .byte #%00011100;--
         .byte #%00111110;--
@@ -494,6 +530,32 @@ SuitSprites
         .byte #%00000000;--
         .byte #%00000000;--
 
+        .byte #%00011000;-- ; heart
+        .byte #%00111100;--
+        .byte #%01111110;--
+        .byte #%11111111;--
+        .byte #%11111111;--
+        .byte #%11111111;--
+        .byte #%01100110;--
+        .byte #%00000000;--
+
+		.byte #%00011000;--; club
+        .byte #%00011000;--
+        .byte #%01011010;--
+        .byte #%11111111;--
+        .byte #%01011010;--
+        .byte #%00011000;--
+        .byte #%00111100;--
+        .byte #%00011000;--
+
+		.byte #%00011100;--; spade	
+        .byte #%00011100;--
+        .byte #%00111110;--
+        .byte #%01111111;--
+        .byte #%01111111;--
+        .byte #%00111110;--
+        .byte #%00011100;--
+        .byte #%00001000;--
 
 CardSprites
         .byte #%00000000;--
