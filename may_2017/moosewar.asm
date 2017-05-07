@@ -37,6 +37,7 @@ Card0   byte    ; face-up card of player 0
 Card1   byte    ; face-up card of player 1
 
 SuitSpritePtr .word   ; Will store pointer to card suit sprite
+CardSpritePtr .word
 
 Temp	byte
 
@@ -143,7 +144,7 @@ StartGame subroutine
 	sta Score1
 
 	; Initialize cards
-	lda #$19
+	lda #$11
 	sta Card0
 	lda #$21
 	sta Card1
@@ -232,7 +233,6 @@ PlayingStateKernel
 	tay
 	lda SuitSpritesIndex,y
 
-CardDone
 	; Calculate sprite address for suit for P1, with offset from calcuation above. 
 	; Offset in A
 	; remember low byte of address is in left hand side of item, not right
@@ -245,20 +245,33 @@ CardDone
 	adc #0 ; high byte will be 0 but we still need the carry
 	sta SuitSpritePtr+1
 
+	; Repeat process for card sprite
+	lda Card0
+	and #$0F
+	tay
+	lda CardSpritesIndex,y
+	clc
+	adc #<CardSprites
+	sta CardSpritePtr
+	lda #>CardSprites
+	adc #0 ; high byte will be 0 but we still need the carry
+	sta CardSpritePtr+1
+
 	; Draw the sprite for the card suit and card number for P1
 	ldy #7
 SpriteLoopP1 
 	sta WSYNC
 	lda (SuitSpritePtr),y
 	sta GRP0
-;	lda (SuitSpritePtr),y
-;	sta GRP1
+	lda (CardSpritePtr),y
+	sta GRP1
 	dey
 	bpl SpriteLoopP1
 
 	sta WSYNC
 	lda #0
 	sta GRP0
+	sta GRP1
     TIMER_WAIT
 
 	TIMER_SETUP 40
@@ -311,7 +324,10 @@ SpriteLoopP2
 	sta GRP1
 	dey
 	bpl SpriteLoopP2
-
+	sta WSYNC
+	lda #0
+	sta GRP0
+	sta GRP1
 	TIMER_WAIT
 
 	; bottom of cards
@@ -557,8 +573,143 @@ SuitSprites
         .byte #%00011100;--
         .byte #%00001000;--
 
+CardSpritesIndex
+	; not efficient use of space, but easy way to calculate the offset
+	; into CardSprites needed for each suit
+	.byte #0   ; 1
+	.byte #8   ; 2
+	.byte #16  ; 3
+	.byte #24  ; 4
+	.byte #32  ; 5
+	.byte #40  ; 6
+	.byte #48  ; 7
+	.byte #56  ; 8
+	.byte #64  ; 9
+	.byte #72  ; 10
+	.byte #80  ; J
+	.byte #88  ; Q
+	.byte #96  ; K
+	.byte #104  ; A
+
 CardSprites
+		.byte #%00111000;-- 1
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00110000;--
+        .byte #%00010000;--
+
+		.byte #%00111100;-- 2
+        .byte #%00110000;--
+        .byte #%00011000;--
+        .byte #%00001100;--
+        .byte #%00000100;--
+        .byte #%00100100;--
+        .byte #%00100100;--
+        .byte #%00011100;--
+
+		.byte #%00111100;-- 3
+        .byte #%00000100;--
+        .byte #%00000100;--
+        .byte #%00111100;--
+        .byte #%00000100;--
+        .byte #%00000100;--
+        .byte #%00111100;--
         .byte #%00000000;--
+
+		.byte #%00000100;-- 4
+        .byte #%00000100;--
+        .byte #%00000100;--
+        .byte #%00111110;--
+        .byte #%00100100;--
+        .byte #%00010100;--
+        .byte #%00001100;--
+        .byte #%00000100;--
+
+		.byte #%00111100;-- 5
+        .byte #%00000100;--
+        .byte #%00000100;--
+        .byte #%00000100;--
+        .byte #%00111100;--
+        .byte #%00100000;--
+        .byte #%00100000;--
+        .byte #%00111100;--
+
+		.byte #%00011000;-- 6
+        .byte #%00100100;--
+        .byte #%00100100;--
+        .byte #%00111100;--
+        .byte #%00100000;--
+        .byte #%00100000;--
+        .byte #%00011000;--
+        .byte #%00000000;--
+
+		.byte #%00100000;-- 7
+        .byte #%00100000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00001000;--
+        .byte #%00001000;--
+        .byte #%00000100;--
+        .byte #%00111100;--
+
+		.byte #%00111000;-- 8
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%00111000;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%00111000;--
+
+		.byte #%00000100;-- 9
+        .byte #%00000100;--
+        .byte #%00000100;--
+        .byte #%00111100;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%00111000;--
+
+		.byte #%01001100;-- 10
+        .byte #%01010010;--
+        .byte #%01010010;--
+        .byte #%01010010;--
+        .byte #%01010010;--
+        .byte #%01010010;--
+        .byte #%01010010;--
+        .byte #%01001100;--
+
+		.byte #%01110000;-- J
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00010000;--
+        .byte #%00111000;--
+
+ 		.byte #%00000000;-- Q
+        .byte #%00111110;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%01000100;--
+        .byte #%00111000;--
+
+ 		.byte #%00100100;-- K
+        .byte #%00100100;--
+        .byte #%00101000;--
+        .byte #%00110000;--
+        .byte #%00101000;--
+        .byte #%00100100;--
+        .byte #%00100100;--
+        .byte #%00100100;--		
+
+        .byte #%00000000;-- A
         .byte #%01000010;--
         .byte #%01000010;--
         .byte #%01111110;--
