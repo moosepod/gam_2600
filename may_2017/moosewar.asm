@@ -39,10 +39,17 @@ Card1   byte    ; face-up card of player 1
 SuitSpritePtr .word   ; Will store pointer to card suit sprite
 CardSpritePtr .word
 
+ButtonPressed byte ; used for debouncing
+
 Temp	byte
 
 CardSpriteH equ 7 ; horizontal position of card sprite
 SuitSpriteH equ 8 ; horizontal position of suit sprite
+
+Player0CardIndex byte ; index into deck below of P0 card
+Player1CardIndex byte ; index into deck below of P1 card
+
+DeckStart byte ; first byte of decks. 104 (52 * 2) bytes will be used for deck
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -66,6 +73,8 @@ Start
 	sta Score0
 	lda #$00
 	sta Score1
+	lda #$00
+	sta ButtonPressed
 
 NextFrame
 	VERTICAL_SYNC
@@ -149,6 +158,44 @@ StartGame subroutine
 	lda #$21
 	sta Card1
 	
+	; Clear button debounce
+	lda #$00
+	sta ButtonPressed
+
+	;; Initialize deck.
+	lda #0
+	sta Player0CardIndex
+
+	; Setup the 4 suits of cards
+	lda #0
+	jsr SetupCardSuit
+	lda #$10
+	jsr SetupCardSuit
+	lda #$20
+	jsr SetupCardSuit
+	lda #$30
+		jsr SetupCardSuit
+
+	; Reset counter and setup initial deck
+	lda #0
+	sta Player0CardIndex
+	lda DeckStart
+	sta Card0
+
+	rts
+
+SetupCardSuit subroutine
+	; Setup next suit of cards. Expects suit to be put on accumulator
+	sta Temp
+	ldy #13
+.CardSetupLoop
+	ldx Player0CardIndex
+	tya
+	adc Temp ; this will add the suit (stored in high nibble) onto the base card
+	sta DeckStart,x
+	inc Player0CardIndex
+	dey
+	bpl .CardSetupLoop
 	rts
 
 ;;;
@@ -192,9 +239,28 @@ StartStateKernel
 ;;;
 PlayingStateKernel
 	;;;;; Draw the card decks. 
-
 	lda #%00000011	; score mode + reflect playfield
 	sta CTRLPF
+
+	; Check button press with debounce
+	bit INPT4
+	bmi .SkipP0Button
+	bit ButtonPressed
+	bmi .ButtonStillPressed
+
+	; button is pressed, so pick next card
+	inc Player0CardIndex
+	ldx Player0CardIndex
+	lda DeckStart,x
+	sta Card0
+	lda #$FF
+	sta ButtonPressed
+	jmp .ButtonStillPressed
+
+.SkipP0Button
+	lda #0
+	sta ButtonPressed
+.ButtonStillPressed
 
 	; top of cards
 	TIMER_SETUP 10

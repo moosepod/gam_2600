@@ -16,6 +16,12 @@
 - Added states
 - Tested using spacing for NUSIZ0/NUSIZ1 but wide was too wide and narrow too narrow
 
+5/7/2017
+- Added joystick/debounce
+- Added actual list of cards
+- Added card all card sprites
+- TODO: solve "bounce" when button hit 
+
 ***
 
 TODO:
